@@ -1,0 +1,85 @@
+import pyaedt
+import os
+import shutil
+
+from .pydesign import pyDesign
+
+class pyProject:
+
+    def __init__(self, desktop) :
+
+        self.desktop = desktop
+        self.desktop.odesktop.NewProject(pyaedt.generate_unique_project_name())
+
+        self.proj = desktop.odesktop.GetActiveProject()
+        
+        self._get_project_attribute()
+
+        self.designs = []
+
+
+    def __getattr__(self, name):
+        return getattr(self.proj, name)
+    
+    def __dir__(self):
+        default_dir = super().__dir__()
+        if self.solver_instance is not None:
+            return list(set(default_dir + dir(self.proj)))
+        return default_dir
+
+
+    def _get_project_attribute(self) :
+
+        self.name = self.GetName()
+        self.path = self.GetPath()
+        self.aedt_path = os.path.join(self.path, self.name + ".aedt")
+
+    
+    def save_project(self, path=None) :
+
+        if path == None :
+            path = os.path.join(os.getcwd(), self.name + ".aedt")
+        else :
+            path = os.path.normpath(os.path.abspath(path)) # OS compatibility
+
+        # make dir
+        save_dir = os.path.dirname(path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        
+        self.desktop.save_project(self.name, path)
+        # oProject = self.desktop.odesktop.SetActiveProject(self.name)
+        # oProject.SaveAs(path, True)
+
+        norm_path = os.path.normpath(self.path)
+        basename = os.path.basename(norm_path)
+
+        # delete Temp folder
+        if os.path.exists(norm_path) and "Temp" in norm_path and basename.startswith("pyaedt_prj_"):
+            shutil.rmtree(norm_path)
+
+        self._get_project_attribute()
+
+
+    def delete_project(self) :
+
+        base_name = os.path.splitext(os.path.basename(self.aedt_path))[0]
+
+        file_aedt = os.path.join(self.path, base_name + ".aedt")
+        file_lock = os.path.join(self.path, base_name + ".aedt.lock")
+        folder_results = os.path.join(self.path, base_name + ".aedtresults")
+
+        if os.path.exists(file_aedt):
+            os.remove(file_aedt)
+        if os.path.exists(file_lock):
+            os.remove(file_lock)
+        if os.path.exists(folder_results):
+            shutil.rmtree(folder_results)
+
+
+    def create_design(self, name, solver, solution) :
+
+        design = pyDesign.create_design(self, name, solver, solution)
+        self.designs.append(design)
+        return design
+    

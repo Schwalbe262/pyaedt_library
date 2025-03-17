@@ -1,0 +1,8 @@
+setup.py
+src/pyaedt_module/__init__.py
+src/pyaedt_module.egg-info/PKG-INFO
+src/pyaedt_module.egg-info/SOURCES.txt
+src/pyaedt_module.egg-info/dependency_links.txt
+src/pyaedt_module.egg-info/top_level.txt
+src/pyaedt_module/core/__init__.py
+src/pyaedt_module/core/desktop.py
