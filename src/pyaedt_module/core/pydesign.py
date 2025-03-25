@@ -1,6 +1,8 @@
 from pyaedt_module.solver.hfss import HFSS
 from pyaedt_module.model3d import Model3d
 
+import numpy as np
+
 class pyDesign:
     def __init__(self, project, name=None, solver=None, solution=None):
         self.project = project
@@ -35,6 +37,7 @@ class pyDesign:
             self.solver_instance.variable_manager[key] = value  # HFSS 변수 시스템에 저장
         else:
             self._store[key] = value  # HFSS가 없으면 _store에 저장
+            return value
 
     def __delitem__(self, key):
         """변수 삭제 - HFSS에서 삭제 또는 _store에서 삭제"""
@@ -60,6 +63,9 @@ class pyDesign:
         return f"pyDesign(name={self.name}, solver={self.solver}, solution={self.solution}, store={self._store})"
 
 
+
+
+
     @classmethod
     def create_design(cls, project, name=None, solver=None, solution=None):
         design = cls(project, name=name, solver=solver, solution=solution)
@@ -79,9 +85,34 @@ class pyDesign:
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         self.solver_instance = HFSS(project=None, design=self.name, solution_type=self.solution)
 
+        self.solver_instance.design = self
+
         self._get_module()
         
 
     def _get_module(self):
         self.model3d = Model3d(self)
+
+
+    def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit="mm"):
+
+        if unit == None :
+            unit = ""
+
+        resolution_str = str(resolution)
+        if '.' in resolution_str:
+            precision = len(resolution_str.split('.')[1])
+        else:
+            precision = 0
+        
+        possible_values = np.arange(lower, upper + resolution, resolution)
+        value = round(np.random.choice(possible_values), precision)
+
+        if resolution == 1 :
+            value = int(value)
+
+        if variable_name != None :
+            self[variable_name] = f"{value}{unit}"
+
+        return value
 
