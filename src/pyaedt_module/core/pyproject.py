@@ -1,6 +1,8 @@
 import pyaedt
 import os
 import shutil
+import stat
+import time
 
 from .pydesign import pyDesign
 
@@ -77,22 +79,24 @@ class pyProject:
             shutil.rmtree(folder_results)
 
 
-    def delete_project_folder(self, path=None) :
-        
-        if path == None :
-            path = self.GetPath()
+    def _remove_readonly(self, func, path, excinfo):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
 
+    def delete_project_folder(self, path=None, retries=5, delay=1):
+        if path is None:
+            path = self.GetPath()  # GetPath()가 경로를 반환하는 메서드라고 가정
+        
         if os.path.exists(path) and os.path.isdir(path):
-            try:
-                shutil.rmtree(path)
-                return True
-            except Exception as e:
-                print(e)
-                return False
+            for attempt in range(retries):
+                try:
+                    shutil.rmtree(path, onerror=self._remove_readonly)
+                    return True
+                except Exception as e:
+                    time.sleep(delay)
+            return False
         else:
             return False
-
- 
 
 
 
