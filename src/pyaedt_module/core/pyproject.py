@@ -77,6 +77,26 @@ class pyProject:
             shutil.rmtree(folder_results)
 
 
+    def delete_project_folder(self, path=None) :
+        
+        if path == None :
+            path = self.GetPath()
+
+        if os.path.exists(path) and os.path.isdir(path):
+            try:
+                shutil.rmtree(path)
+                return True
+            except Exception as e:
+                print(e)
+                return False
+        else:
+            return False
+
+ 
+
+
+
+
     def create_design(self, name, solver, solution) :
 
         design = pyDesign.create_design(self, name, solver, solution)

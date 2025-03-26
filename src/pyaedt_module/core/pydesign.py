@@ -1,5 +1,6 @@
 from pyaedt_module.solver.hfss import HFSS
 from pyaedt_module.model3d import Model3d
+from .post_processing import PostProcessing
 
 import numpy as np
 
@@ -92,6 +93,7 @@ class pyDesign:
 
     def _get_module(self):
         self.model3d = Model3d(self)
+        self.post_processing = PostProcessing(self)
 
 
     def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit="mm"):
