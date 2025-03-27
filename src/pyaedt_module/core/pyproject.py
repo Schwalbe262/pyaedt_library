@@ -83,7 +83,7 @@ class pyProject:
         os.chmod(path, stat.S_IWRITE)
         func(path)
 
-    def delete_project_folder(self, path=None, retries=5, delay=1):
+    def delete_project_folder(self, path=None, retries=10, delay=1):
         if path is None:
             path = self.GetPath()  # GetPath()가 경로를 반환하는 메서드라고 가정
         
