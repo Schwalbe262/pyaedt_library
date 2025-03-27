@@ -25,8 +25,8 @@ class HFSS(AEDTHfss) :
         
 
     def get_report_data(self, setup="Setup1") :
-
-        report = self.export_convergence(setup=setup, variations="", output_file=None)
+        
+        report = self.design.export_convergence(setup=setup, variations="", output_file=None)
     
         with open(report, 'r') as file:
             lines = file.readlines()
