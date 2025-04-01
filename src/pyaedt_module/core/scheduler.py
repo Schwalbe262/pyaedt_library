@@ -138,11 +138,8 @@ class Scheduler :
                     df.loc[i] = [pid, 0, start_time, status, 0, 0]
                     time.sleep(self.start_interval)
 
-                    print("start!")
-
                     if i == self.max_processes-1 : 
                         start_flag = False
-                        print("start!")
 
                 else :
 
