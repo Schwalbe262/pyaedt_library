@@ -5,18 +5,23 @@ from collections import namedtuple
 class Winding:
 
     def __init__(self, design) :
-
         self.design = design
-        a = 1
-        
     
     def __getattr__(self, name):
-
         return getattr(self.design, name)
     
 
     def _convert_unit(self, value, target_unit="mm"):
-
+        """
+        주어진 값을 다른 단위로 변환합니다.
+        
+        Parameters:
+            value (str): 변환할 값 (예: "10mm", "1cm")
+            target_unit (str): 변환할 단위 ("mm", "cm", "m", "um")
+            
+        Returns:
+            float: 변환된 값
+        """
         unit_map = {
             "mm": 1,
             "cm": 10,
@@ -45,7 +50,18 @@ class Winding:
     
 
     def create_polyline(self, name="winding", points=None, width=None, height=None, **kwargs):
-
+        """
+        폴리라인을 생성합니다.
+        
+        Parameters:
+            name (str): 폴리라인의 이름
+            points (list): 폴리라인의 점들
+            width (str): 폴리라인의 너비
+            height (str): 폴리라인의 높이
+            
+        Returns:
+            object: 생성된 폴리라인 객체
+        """
         polyline_obj = self.design.modeler.create_polyline(points=points, name=name, xsection_type="Rectangle", xsection_width=f"{width}", xsection_height=f"{height}")
         polyline_obj.point_list = points
         
@@ -53,7 +69,21 @@ class Winding:
     
 
     def create_via(self, name="via", center=[0,0,0], outer_R=None, inner_R=None, height=None, via_pad_R=None, via_pad_thick=None) :
-
+        """
+        비아를 생성합니다.
+        
+        Parameters:
+            name (str): 비아의 이름
+            center (list): 비아의 중심 좌표
+            outer_R (str): 비아의 외부 반지름
+            inner_R (str): 비아의 내부 반지름
+            height (str): 비아의 높이
+            via_pad_R (str): 비아 패드의 반지름
+            via_pad_thick (str): 비아 패드의 두께
+            
+        Returns:
+            object: 생성된 비아 객체
+        """
         outer_cylinder = self.design.modeler.create_cylinder(orientation="Z", 
                                                              origin=[center[0], center[1], f"({center[2]})-({height}/2)"], 
                                                              radius=outer_R, height=height, name=name, material="copper", num_sides=12)
@@ -81,7 +111,23 @@ class Winding:
 
 
     def coil_points(self, turns=5, **kwargs):
-
+        """
+        코일의 점들을 생성합니다.
+        
+        Parameters:
+            turns (int): 코일의 턴 수
+            **kwargs:
+                outer_x (str): 코일의 외부 x 크기
+                outer_y (str): 코일의 외부 y 크기
+                fillet (str): 코일의 필릿 크기
+                inner (str): 코일의 내부 크기
+                fill_factor (float): 코일의 채움 계수
+                theta1 (str): 코일의 각도 1
+                theta2 (str): 코일의 각도 2
+                
+        Returns:
+            namedtuple: 코일의 점들과 관련 파라미터들
+        """
         outer_x = kwargs.get("outer_x", "50mm")
         outer_y = kwargs.get("outer_y", "30mm")
 
@@ -105,10 +151,6 @@ class Winding:
 
         points = []
 
-        # inner의 값은 fillet*(1 / (1-tan(pi/8))) 보다 작아야 함
-
-
-
         for i in range(N) :
 
             points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({wg})", f"-({outer_y}) + ({i-1})*({wg})", 0])
@@ -131,19 +173,28 @@ class Winding:
                                                      "outer_x", "outer_xx", "outer_y", "outer_yy", "fillet", "inner",
                                                      "width", "gap", "wg", "theta1", "theta2"])
 
-        # fillet_coil 함수 마지막에:
         return WindingResult(points=points, 
                              outer_x=outer_x, outer_xx=outer_xx, outer_y=outer_y, outer_yy=outer_yy, fillet=fillet, inner=inner,
                              width=width, gap=gap, wg=wg, theta1=theta1, theta2=theta2)
         
-
-
-
-
-    
-
     def create_winding(self, name="winding", **kwargs):
-
+        """
+        와인딩을 생성합니다.
+        
+        Parameters:
+            name (str): 와인딩의 이름
+            **kwargs:
+                outer_x (str): 와인딩의 외부 x 크기
+                outer_y (str): 와인딩의 외부 y 크기
+                outer_xx (str): 와인딩의 내부 x 크기
+                outer_yy (str): 와인딩의 내부 y 크기
+                turns (int): 와인딩의 턴 수
+                inner (str): 와인딩의 내부 크기
+                fill_factor (float): 와인딩의 채움 계수
+                
+        Returns:
+            object: 생성된 와인딩 객체
+        """
         outer_x = kwargs.get("outer_x", "50mm")
         outer_y = kwargs.get("outer_y", "30mm")
 
@@ -166,18 +217,10 @@ class Winding:
         theta1 = f"atan(({outer_yy})/(({outer_x})-({c})))"
         theta2 = f"atan(({outer_y})/(({outer_xx})-({c})))"
 
-
-        # theta1 = f"pi/8"
-        # theta1 = f"pi/8 * 3"
-
-
         points = []
-
-
 
         for i in range(N) :
 
-            # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"-({outer_y}) + ({i})*({wg})", 0])
             points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"-({outer_y}) + ({i-1})*({wg})", 0])
             points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
             points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"({outer_yy}) - ({i})*({wg})*(tan({theta1}))", 0])
@@ -188,148 +231,4 @@ class Winding:
             points.append([f"-({outer_x}) + ({i})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
             points.append([f"-({outer_xx}) + ({i})*({wg})*(1/tan({theta2}))", f"-({outer_y}) + ({i})*({wg})", 0])
 
-
-            # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
-            # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"({outer_yy}) - ({i})*({wg})*(1/tan({theta1})) - ({i})*({wg})", 0])
-            # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({(i-1)})*({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-
-
         self.design.modeler.create_polyline(points=points)
-        
-
-
-
-
-        # points = []
-
-
-
-        # for i in range(N) :
-
-        #     # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"-({outer_y}) + ({i})*({wg})", 0])
-        #     points.append([f"({outer_xx}) - ({i})*({wg}) + ({wg})", f"-({outer_y}) + ({i-1})*({wg})", 0])
-        #     points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"-({outer_yy}) + ({i})*({wg})", 0])
-        #     points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"({outer_yy}) - ({i})*({wg})", 0])
-        #     points.append([f"({outer_xx}) - ({i})*({wg}) + ({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-        #     points.append([f"-({outer_xx}) + ({i})*({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-        #     points.append([f"-({outer_x}) + ({i})*({wg})", f"({outer_yy}) - ({i})*({wg})", 0])
-        #     points.append([f"-({outer_x}) + ({i})*({wg})", f"-({outer_yy}) + ({i})*({wg})", 0])
-        #     points.append([f"-({outer_xx}) + ({i})*({wg})", f"-({outer_y}) + ({i})*({wg})", 0])
-
-
-        #     # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
-        #     # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"({outer_yy}) - ({i})*({wg})*(1/tan({theta1})) - ({i})*({wg})", 0])
-        #     # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({(i-1)})*({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-
-
-        # self.design.modeler.create_polyline(points=points)
-
-
-
-        points = []
-
-
-
-        for i in range(N) :
-
-            # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"-({outer_y}) + ({i})*({wg})", 0])
-            points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"-({outer_y}) + ({i-1})*({wg})", 0])
-            points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
-            points.append([f"({outer_x}) - ({i})*({wg}) + ({wg})", f"({outer_yy}) - ({i})*({wg})*(tan({theta1}))", 0])
-            points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) + ({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-            points.append([f"-({outer_xx}) + ({i})*({wg})*(1/tan({theta2}))", f"({outer_y}) - ({i})*({wg})", 0])
-            points.append([f"-({outer_x}) + ({i})*({wg})", f"({outer_yy}) - ({i})*({wg})*(tan({theta1}))", 0])
-            points.append([f"-({outer_x}) + ({i})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
-            points.append([f"-({outer_xx}) + ({i})*({wg})*(1/tan({theta2}))", f"-({outer_y}) + ({i})*({wg})", 0])
-
-
-            # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])
-            # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"({outer_yy}) - ({i})*({wg})*(1/tan({theta1})) - ({i})*({wg})", 0])
-            # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({(i-1)})*({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-
-
-        self.design.modeler.create_polyline(points=points)
-        
-
-        # points = []
-
-
-
-        # for i in range(N) :
-
-        #     # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({(i-1)})*({wg})", f"-({outer_y}) + ({i})*({wg})", 0])
-        #     points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"-({outer_yy}) + ({i})*({wg})", 0])
-        #     # points.append([f"({outer_x}) - ({(i-1)})*({wg})", f"({outer_yy}) - ({i})*({wg})*(1/tan({theta1})) - ({i})*({wg})", 0])
-        #     # points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({(i-1)})*({wg})", f"({outer_y}) - ({i})*({wg})", 0])
-
-
-
-        # self.design.modeler.create_polyline(points=points)
-
-
-
-
-        
-    
-
-    # def create_winding(self, name="Tx", **kwargs):
-    #     """
-    #     Creates a winding structure with configurable parameters.
-    #     """
-    #     # 기본 변수 설정
-    #     center_length = kwargs.get("center_length", "50mm")
-    #     center_width = kwargs.get("center_width", "40mm")
-    #     min_lw = kwargs.get("min_lw", "5mm")
-    #     layer_gap_Tx = kwargs.get("layer_gap_Tx", "2mm")
-    #     N_Tx = kwargs.get("N_Tx", 3)
-    #     coil_width = kwargs.get("coil_width", "Tx_width")
-    #     coil_height = kwargs.get("coil_height", "Tx_height")
-        
-    #     # 초기 포인트 설정
-    #     temp = [[f'{center_length}/2', f'{center_width}/(2+{math.sqrt(2)})', 0]]
-        
-    #     # Winding 생성
-    #     for i in range(N_Tx):
-    #         for j in range(8):
-    #             if j == 0:
-    #                 temp.append([f'{center_length}/2+{i}*{layer_gap_Tx}',
-    #                             f'-{center_width}/(2+{math.sqrt(2)})-{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}', 0])
-    #             elif j == 1:
-    #                 temp.append([f'{center_length}/2-{min_lw}/(2+{math.sqrt(2)})+{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}',
-    #                             f'-{center_width}/2-{i}*{layer_gap_Tx}', 0])
-    #             elif j == 2:
-    #                 temp.append([f'-{center_length}/2+{min_lw}/(2+{math.sqrt(2)})-{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}',
-    #                             f'-{center_width}/2-{i}*{layer_gap_Tx}', 0])
-    #             elif j == 3:
-    #                 temp.append([f'-{center_length}/2-{i}*{layer_gap_Tx}',
-    #                             f'-{center_width}/(2+{math.sqrt(2)})-{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}', 0])
-    #             elif j == 4:
-    #                 temp.append([f'-{center_length}/2-{i}*{layer_gap_Tx}',
-    #                             f'{center_width}/(2+{math.sqrt(2)})+{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}', 0])
-    #             elif j == 5:
-    #                 temp.append([f'-{center_length}/2+{min_lw}/(2+{math.sqrt(2)})-{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}',
-    #                             f'{center_width}/2+{i}*{layer_gap_Tx}', 0])
-    #             elif j == 6:
-    #                 temp.append([f'{center_length}/2-{min_lw}/(2+{math.sqrt(2)})+{i}*{layer_gap_Tx}*{math.tan(math.pi/8)}+{layer_gap_Tx}*{math.sqrt(2)}',
-    #                             f'{center_width}/2+{i}*{layer_gap_Tx}', 0])
-    #             elif j == 7:
-    #                 temp.append([f'{center_length}/2+{(i+1)}*{layer_gap_Tx}',
-    #                             f'{center_width}/(2+{math.sqrt(2)})+{(i+1)}*{layer_gap_Tx}*{math.tan(math.pi/8)}', 0])
-
-    #         if i == N_Tx - 1:
-    #             temp.append([f'{center_length}/2+{(i+1)}*{layer_gap_Tx}',
-    #                         f'{center_width}/(2+{math.sqrt(2)})+{(i+1)}*{layer_gap_Tx}*{math.tan(math.pi/8)}-0.2mm', 0])
-        
-    #     # 폴리라인 생성
-    #     sorted_edges_Tx = self._create_polyline(points=temp, name=name, coil_width=coil_width, coil_height=coil_height)
-        
-    #     # winding 객체 색상 변경
-    #     winding_obj = self.design.modeler.get_object_from_name(objname=name)
-    #     winding_obj.color = (255, 0, 0)
-        
-    #     return winding_obj

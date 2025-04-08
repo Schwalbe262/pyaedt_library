@@ -6,13 +6,10 @@ import matplotlib.pyplot as plt
 class PostProcessing:
 
     def __init__(self, design) :
-
         self.design = design
-        a = 1
         
-    def detect_peak(self, freq=None, data=None) :
-
-        peaks_prom, properties = find_peaks(data, prominence=30)
+    def detect_peak(self, freq=None, data=None, prominence=30) :
+        peaks_prom, properties = find_peaks(data, prominence=prominence)
 
         if freq is not None :
             peak_freqs_prom = freq[peaks_prom].values
@@ -84,27 +81,21 @@ class PostProcessing:
         # 해당 인덱스의 param_data 값을 반환 (파이썬의 일반 타입으로)
         return param_data[closest_index]
 
-        
+    def _convert_frequency(self, data, column, multiplier):
+        idx = data.columns.get_loc(column)
+        new_freq = data[column] * multiplier
+        data.drop(columns=[column], inplace=True)
+        data.insert(idx, "Freq [Hz]", new_freq)
+        return data
 
     def data_preprocessing(self, data) :
 
         if "Freq [kHz]" in data.columns:
-            idx = data.columns.get_loc("Freq [kHz]")
-            new_freq = data["Freq [kHz]"] * 1e3  # kHz -> Hz 변환
-            data.drop(columns=["Freq [kHz]"], inplace=True)
-            data.insert(idx, "Freq [Hz]", new_freq)
-            
+            data = self._convert_frequency(data, "Freq [kHz]", 1e3)
         elif "Freq [MHz]" in data.columns:
-            idx = data.columns.get_loc("Freq [MHz]")
-            new_freq = data["Freq [MHz]"] * 1e6  # MHz -> Hz 변환
-            data.drop(columns=["Freq [MHz]"], inplace=True)
-            data.insert(idx, "Freq [Hz]", new_freq)
-            
+            data = self._convert_frequency(data, "Freq [MHz]", 1e6)
         elif "Freq [GHz]" in data.columns:
-            idx = data.columns.get_loc("Freq [GHz]")
-            new_freq = data["Freq [GHz]"] * 1e9  # GHz -> Hz 변환
-            data.drop(columns=["Freq [GHz]"], inplace=True)
-            data.insert(idx, "Freq [Hz]", new_freq)
+            data = self._convert_frequency(data, "Freq [GHz]", 1e9)
 
         # "Freq [Hz]" 컬럼의 위치 찾기
         idx = data.columns.get_loc("Freq [Hz]")

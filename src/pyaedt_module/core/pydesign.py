@@ -66,7 +66,6 @@ class pyDesign:
 
 
 
-
     @classmethod
     def create_design(cls, project, name=None, solver=None, solution=None):
         design = cls(project, name=name, solver=solver, solution=solution)
@@ -80,8 +79,6 @@ class pyDesign:
     def _setup_hfss(self):
         if self.solution is None:
             self.solution = "HFSS Terminal Network"
-        # self.project.InsertDesign("HFSS", self.name, self.solution, "")
-        # self.solver_instance = self.project.SetActiveDesign(self.name)
 
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         self.solver_instance = HFSS(project=None, design=self.name, solution_type=self.solution)
@@ -97,9 +94,6 @@ class pyDesign:
 
 
     def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit="mm"):
-
-        if unit == None :
-            unit = ""
 
         resolution_str = str(resolution)
         if '.' in resolution_str:

@@ -49,7 +49,7 @@ class Scheduler :
 
         script_path = os.path.join(os.getcwd(), self.script_name)
         process = subprocess.Popen(
-            f'conda run -n {self.conda_env} python {script_path}',
+            ['conda', 'run', '-n', self.conda_env, 'python', script_path],
             shell=False,
             stdout=subprocess.DEVNULL,  # 출력을 콘솔에 표시하지 않음
             stderr=subprocess.DEVNULL
@@ -168,7 +168,7 @@ class Scheduler :
                             self.iter = self.iter + 1
                             df.loc[i] = [pid, ansys_pid, current_time_strf, "PENDING", cpu_usage, mem_usage]
 
-                        elif running == 0 : # 시뮬레이션 이상 동작
+                        elif running == 2 : # 시뮬레이션 이상 동작
                             df.loc[i] = [pid, ansys_pid, current_time_strf, "PENDING", cpu_usage, mem_usage]
                             proc = psutil.Process(pid)
                             proc.kill()

@@ -1,18 +1,30 @@
 class Core :
 
     def __init__(self, design) :
-
         self.design = design
-        a = 1
-        
     
     def __getattr__(self, name):
-
         return getattr(self.design, name)
     
 
     def create_coretype_core(self, name="core", **kwargs) :
-
+        """
+        코어 타입의 코어를 생성합니다.
+        
+        Parameters:
+            name (str): 코어의 이름
+            **kwargs:
+                w1 (str): 코어의 너비
+                l1_leg (str): 코어의 다리 길이
+                l1_top (str): 코어의 상단 길이
+                l2 (str): 코어의 길이
+                h1 (str): 코어의 높이
+                mat (str): 코어의 재질
+                coreloss (bool): 코어 손실 활성화 여부
+                
+        Returns:
+            object: 생성된 코어 객체
+        """
         # variable setting
         core_w1 = kwargs.get("w1", "60mm") # core_w1
         core_l1_leg = kwargs.get("l1_leg", "25mm") # core_l1_leg

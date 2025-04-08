@@ -18,6 +18,7 @@ class pyProject:
         self._get_project_attribute()
 
         self.designs = []
+        self.solver_instance = None
 
 
     def __getattr__(self, name):
@@ -50,8 +51,6 @@ class pyProject:
             os.makedirs(save_dir)
         
         self.desktop.save_project(self.name, path)
-        # oProject = self.desktop.odesktop.SetActiveProject(self.name)
-        # oProject.SaveAs(path, True)
 
         norm_path = os.path.normpath(self.path)
         basename = os.path.basename(norm_path)
@@ -85,7 +84,7 @@ class pyProject:
 
     def delete_project_folder(self, path=None, retries=10, delay=1):
         if path is None:
-            path = self.GetPath()  # GetPath()가 경로를 반환하는 메서드라고 가정
+            path = self.GetPath()
         
         if os.path.exists(path) and os.path.isdir(path):
             for attempt in range(retries):
@@ -97,7 +96,6 @@ class pyProject:
             return False
         else:
             return False
-
 
 
 

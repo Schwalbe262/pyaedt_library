@@ -49,11 +49,20 @@ class pyDesktop(AEDTDesktop) :
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
+        return folder_path
+
 
     def kill_process(self):
 
-        proc = psutil.Process(self.pid)
-        proc.kill()
+        try:
+            proc = psutil.Process(self.pid)
+            proc.kill()
+            return True
+        except psutil.NoSuchProcess:
+            return False
+        except Exception as e:
+            print(f"Error killing process: {e}")
+            return False
 
 
     def create_project(self) :

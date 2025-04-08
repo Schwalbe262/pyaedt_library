@@ -9,9 +9,14 @@ class HFSS(AEDTHfss) :
 
 
     def assign_terminal(self, name="terminal", edges=None, resistance=50) :
-
-        # edges : list (edge.id)
-
+        """
+        터미널을 할당합니다.
+        
+        Parameters:
+            name (str): 터미널의 이름
+            edges (list): 터미널을 할당할 엣지들의 ID 리스트
+            resistance (float): 터미널의 저항값 (옴)
+        """
         designs = self.design.project.SetActiveDesign(self.design.name)
         oModule = designs.GetModule("BoundarySetup")
 
@@ -25,7 +30,15 @@ class HFSS(AEDTHfss) :
         
 
     def get_report_data(self, setup="Setup1") :
+        """
+        시뮬레이션 리포트 데이터를 가져옵니다.
         
+        Parameters:
+            setup (str): 시뮬레이션 설정 이름
+            
+        Returns:
+            tuple: (패스 번호, 테트라헤드라 수, 델타 S 값)
+        """
         report = self.design.export_convergence(setup=setup, variations="", output_file=None)
     
         with open(report, 'r') as file:
