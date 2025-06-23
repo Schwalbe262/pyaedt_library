@@ -98,7 +98,7 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         output_df.dropna(inplace=True)
 
-        output_df.to_csv("maxwell_magnetic.csv")
+        #output_df.to_csv("maxwell_magnetic.csv")
         
         return report, output_df
 
@@ -161,7 +161,7 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         output_df.dropna(inplace=True)
 
-        output_df.to_csv("maxwell_calculator.csv")
+        #output_df.to_csv("maxwell_calculator.csv")
 
         return report, output_df
 

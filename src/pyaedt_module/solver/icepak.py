@@ -72,7 +72,7 @@ class Icepak(AEDTIcepak) :
         output_df = output_df[name_list]
         output_df.dropna(inplace=True)
 
-        output_df.to_csv("icepak_calculator.csv")
+        #output_df.to_csv("icepak_calculator.csv")
         
         return report, output_df
 
