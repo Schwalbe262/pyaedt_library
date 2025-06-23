@@ -1,6 +1,7 @@
 import sys
 import os
 import platform
+import shutil
 
 os_name = platform.system()
 if os_name == "Windows":
@@ -306,6 +307,15 @@ class Simulation() :
         self.maxwell_design.close_project()
 
         self.desktop.release_desktop(close_projects=True, close_on_exit=True)
+
+        # Delete the project folder to save space
+        try:
+            project_folder = os.path.join(os.getcwd(), "simulation", self.PROJECT_NAME)
+            if os.path.isdir(project_folder):
+                shutil.rmtree(project_folder)
+                print(f"Successfully deleted project folder: {project_folder}")
+        except Exception as e:
+            print(f"Error deleting project folder {project_folder}: {e}", file=sys.stderr)
 
 
 if __name__ == '__main__':
