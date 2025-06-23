@@ -24,12 +24,12 @@ from filelock import FileLock
 import traceback
 import logging
 
-from input_parameter import create_input_parameter, calculate_coil_parameter, calculate_coil_offset, set_design_variables
-from modeling import (
+from module.input_parameter import create_input_parameter, calculate_coil_parameter, calculate_coil_offset, set_design_variables
+from module.modeling import (
     create_core_model, create_all_windings, create_cold_plate, create_air,
     assign_meshing, assign_excitations, create_face, create_mold
 )
-from report import (
+from module.report import (
     get_input_parameter, get_maxwell_magnetic_parameter,
     get_maxwell_calculator_parameter, get_convergence_report, get_icepak_calculator_parameter
 )
@@ -153,7 +153,12 @@ class Simulation() :
         os.makedirs(folder_path, exist_ok=True)  # 폴더가 없으면 생성
         file_path = os.path.join(folder_path, f"{self.PROJECT_NAME}.aedt")
         self.project.save_project(path=file_path)
+        
+        start_time = time.time()
+        print(f"Maxwell analysis started...")
         self.maxwell_design.analyze()
+        end_time = time.time()
+        print(f"Maxwell analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
     def get_simulation_results(self, input=True, step=1):
         current_dir = os.getcwd()
@@ -267,7 +272,11 @@ class Simulation() :
 
     def analyze_icepak(self):
         """Runs the Icepak analysis."""
+        start_time = time.time()
+        print(f"Icepak analysis started...")
         self.icepak_design.analyze()
+        end_time = time.time()
+        print(f"Icepak analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
     def get_icepak_results(self):
         """Retrieves and processes results from the Icepak simulation."""
