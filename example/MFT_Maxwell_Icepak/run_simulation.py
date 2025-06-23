@@ -51,15 +51,6 @@ class Simulation() :
         self.NUM_TASK = 1
         self.freq = 30e3
 
-        
-        os_name = platform.system()
-        if os_name == "Windows":
-            GUI = False
-        else :
-            GUI = True
-
-        self.desktop = pyDesktop(version=None, non_graphical=GUI)
-
         file_path = "simulation_num.txt"
 
         # 파일이 존재하지 않으면 생성
@@ -84,6 +75,14 @@ class Simulation() :
             # 파일은 with 블록 종료 시 자동으로 닫히며, 잠금도 해제됨
 
         print(f"==========simulation{content}==========")
+
+        os_name = platform.system()
+        if os_name == "Windows":
+            GUI = False
+        else :
+            GUI = True
+
+        self.desktop = pyDesktop(version=None, non_graphical=GUI)
 
 
     def create_design(self, name) :
