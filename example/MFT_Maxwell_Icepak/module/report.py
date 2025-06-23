@@ -38,7 +38,8 @@ def get_input_parameter(design):
         "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
         "N1_layer_gap", "N2_layer_gap",
         "N1_offset_ratio", "N2_offset_ratio", "N1_offset", "N2_offset",
-        "cold_plate_x", "cold_plate_y", "cold_plate_z1", "cold_plate_z2"
+        "cold_plate_x", "cold_plate_y", "cold_plate_z1", "cold_plate_z2",
+        "mold_thick", "thermal_conductivity"
     ]
     
     input_data = {col: [getattr(design, col, None)] for col in param_columns}
