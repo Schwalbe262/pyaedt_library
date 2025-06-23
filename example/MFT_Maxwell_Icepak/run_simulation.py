@@ -47,7 +47,7 @@ class Simulation() :
 
     def __init__(self) :
 
-        self.NUM_CORE = 1
+        self.NUM_CORE = 2
         self.NUM_TASK = 1
         self.freq = 30e3
 
