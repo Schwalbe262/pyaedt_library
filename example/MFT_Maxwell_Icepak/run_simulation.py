@@ -1,11 +1,15 @@
 import sys
+import os
 
-sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/") 
-# sys.path.insert(0, r"/gpfs/home1/r1jae262/jupyter/git/pyaedt_library/src/")
+os_name = platform.system()
+if os_name == "Windows":
+    sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/") 
+else :
+    sys.path.insert(0, r"/gpfs/home1/r1jae262/jupyter/git/pyaedt_library/src/")
 
 import pyaedt_module
 from pyaedt_module.core import pyDesktop
-import os
+
 import time
 from datetime import datetime
 
@@ -17,6 +21,8 @@ import pandas as pd
 import platform
 import csv
 from filelock import FileLock
+import traceback
+import logging
 
 from input_parameter import create_input_parameter, calculate_coil_parameter, calculate_coil_offset, set_design_variables
 from modeling import (
@@ -29,6 +35,12 @@ from report import (
 )
 
 
+def save_error_log(project_name, error_info):
+    error_folder = "error"
+    os.makedirs(error_folder, exist_ok=True)
+    error_file = os.path.join(error_folder, f"{project_name}_error.txt")
+    with open(error_file, "w", encoding="utf-8") as f:
+        f.write(error_info)
 
 
 class Simulation() :
@@ -86,6 +98,9 @@ class Simulation() :
         # 1. Simulation 클래스 인스턴스에 속성으로 값을 설정합니다 (예: self.N1 = 10).
         for key, value in input_parameter.items():
             setattr(self.maxwell_design, key, value)
+        
+        self.input_df = pd.DataFrame([input_parameter])
+        
         # 2. input_parameter.py의 함수를 호출하여 Ansys 디자인에 변수를 설정합니다.
         set_design_variables(self.maxwell_design, input_parameter)
 
@@ -280,74 +295,88 @@ class Simulation() :
         self.desktop.release_desktop(close_projects=True, close_on_exit=True)
 
 
-def main():
-    """
-    Main function to run the simulation workflow.
-    Initializes the simulation, creates design, sets variables, and builds the model.
-    """
-    # 1. Simulation 클래스의 인스턴스를 생성합니다.
-    simulation_runner = Simulation()
-
-    # 2. create_design 메서드를 호출하여 프로젝트와 디자인을 초기화합니다.
-    # 이 과정에서 내부에 self.design 객체가 생성됩니다.
-    simulation_runner.create_design("SST_MFT")
-
-    # 3. 이제 입력 매개변수를 생성할 수 있습니다.
-    # 이 메서드는 초기화된 design 객체를 사용하게 됩니다.
-    input_parameters = simulation_runner.create_input_parameter()
-    
-    # 4. 생성된 파라미터를 Simulation 객체와 Ansys 디자인에 설정합니다.
-    simulation_runner.set_variable(input_parameters)
-
-    # 5. 해석 설정 및 실행
-    simulation_runner.set_maxwell_analysis()
-
-    # 6. 모델을 생성합니다.
-    simulation_runner.create_core()
-    simulation_runner.create_face(simulation_runner.maxwell_design)
-    simulation_runner.create_windings()
-    simulation_runner.create_mold()
-    simulation_runner.create_cold_plate()
-    simulation_runner.create_air()
-
-    # 7. 메쉬 및 경계조건 설정
-    simulation_runner.assign_meshing()
-    simulation_runner.assign_excitations()
-
-    # 8. 해석 설정 및 실행
-    simulation_runner.analyze_maxwell()
-
-    # 9. 결과 리포팅
-    simulation_runner.get_simulation_results(input=True)
-
-    # 10. 두 번째 해석 실행
-    simulation_runner.second_simulation()
-
-    # 11. Icepak 디자인 생성
-    simulation_runner.create_icepak()       
-
-    # 12. Icepak 해석 설정
-    simulation_runner.setup_icepak_analysis()
-
-    # 13. Icepak 해석 실행
-    simulation_runner.analyze_icepak()
-
-    # 14. Icepak 결과 리포팅
-    simulation_runner.get_icepak_results()
-
-    # 15. 결과 저장
-    simulation_runner.save_results_to_csv(simulation_runner.results_df)
-
-    simulation_runner.close_project()
-
-
-        
 if __name__ == '__main__':
+    simulation_runner = Simulation()
     for i in range(5000):
-        try :
-            ansys_run = main()
+        try:
+            # 2. create_design 메서드를 호출하여 프로젝트와 디자인을 초기화합니다.
+            simulation_runner.create_design("SST_MFT")
+
+            # 3. 이제 입력 매개변수를 생성할 수 있습니다.
+            input_parameters = simulation_runner.create_input_parameter()
+            
+            # 4. 생성된 파라미터를 Simulation 객체와 Ansys 디자인에 설정합니다.
+            simulation_runner.set_variable(input_parameters)
+
+            # 5. 해석 설정 및 실행
+            simulation_runner.set_maxwell_analysis()
+
+            # 6. 모델을 생성합니다.
+            simulation_runner.create_core()
+            simulation_runner.create_face(simulation_runner.maxwell_design)
+            simulation_runner.create_windings()
+            simulation_runner.create_mold()
+            simulation_runner.create_cold_plate()
+            simulation_runner.create_air()
+
+            # 7. 메쉬 및 경계조건 설정
+            simulation_runner.assign_meshing()
+            simulation_runner.assign_excitations()
+
+            # 8. 해석 설정 및 실행
+            simulation_runner.analyze_maxwell()
+
+            # 9. 결과 리포팅
+            simulation_runner.get_simulation_results(input=True)
+
+            # 10. 두 번째 해석 실행
+            simulation_runner.second_simulation()
+
+            # 11. Icepak 디자인 생성
+            simulation_runner.create_icepak()       
+
+            # 12. Icepak 해석 설정
+            simulation_runner.setup_icepak_analysis()
+
+            # 13. Icepak 해석 실행
+            simulation_runner.analyze_icepak()
+
+            # 14. Icepak 결과 리포팅
+            simulation_runner.get_icepak_results()
+
+            # 15. 결과 저장
+            simulation_runner.save_results_to_csv(simulation_runner.results_df)
+
+            simulation_runner.close_project()
+
         except Exception as e:
-            print(f"An error occurred: {e}")
-            del ansys_run
+            pd.set_option('display.max_rows', None)
+            pd.set_option('display.max_columns', None)
+            pd.set_option('display.width', None)
+            
+            err_info = f"error : {simulation_runner.PROJECT_NAME}\n"
+            try:
+                err_info += f"input : {simulation_runner.input_df.to_string()}\n"
+            except AttributeError:
+                err_info += "input : Not available\n"
+            
+            err_info += f"{str(e)}\n"
+            err_info += traceback.format_exc()
+
+            print(err_info, file=sys.stderr)
+            sys.stderr.flush()
+            
+            logging.error(err_info, exc_info=True)
+            
+            save_error_log(simulation_runner.PROJECT_NAME, err_info)
+            
+            print(f"{simulation_runner.PROJECT_NAME} : {i} simulation Failed")
+            
+            simulation_runner.desktop.release_desktop(close_projects=True, close_on_exit=True)
+            
+            # Re-initialize for the next run
+            simulation_runner = Simulation()
+            time.sleep(1)
+        
 
         

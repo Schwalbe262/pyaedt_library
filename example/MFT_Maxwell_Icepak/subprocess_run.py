@@ -2,13 +2,19 @@ import subprocess
 import time
 import logging
 import os
+import platform
 
 logging.basicConfig(filename='run_debug.log', level=logging.DEBUG)
 
 script_name = "run_simulation.py"
 script_path = os.path.join(os.getcwd(), script_name)
 
-num_processes = 10 # number of subprocess
+os_name = platform.system()
+if os_name == "Windows":
+    num_processes = 10 # number of subprocess
+else :
+    num_processes = 30 # number of subprocess
+
 
 processes = []
 
