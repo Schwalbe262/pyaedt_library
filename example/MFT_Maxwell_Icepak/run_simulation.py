@@ -95,7 +95,7 @@ class Simulation() :
     def create_input_parameter(self, param_list=None) :
         input_parameter = create_input_parameter(self.maxwell_design, param_list)
         print(f"input_parameter : {input_parameter}")
-        print(f"input_parameter : {",".join(str(float(v)) for v in input_parameter.values())}")
+        print("input_parameter :", ",".join(str(float(v)) for v in input_parameter.values()))
         return input_parameter
 
 
