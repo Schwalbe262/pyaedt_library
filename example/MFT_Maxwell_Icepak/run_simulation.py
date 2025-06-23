@@ -1,6 +1,7 @@
 import sys
 
 sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/") 
+# sys.path.insert(0, r"/gpfs/home1/r1jae262/jupyter/git/pyaedt_library/src/")
 
 import pyaedt_module
 from pyaedt_module.core import pyDesktop
@@ -342,6 +343,9 @@ def main():
 
         
 if __name__ == '__main__':
-    main()
+    try :
+        main()
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
         

@@ -42,7 +42,7 @@ while True:
         subprocess.run(["sbatch", "simulation2.sh"])
         time.sleep(5)
         subprocess.run(["squeue", "-u", "r1jae262"])
-        time.sleep(60)
+        time.sleep(120)
     
     # 3시간 대기
     print(f"6시간 대기 중... ({interval_seconds}초)")

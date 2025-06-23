@@ -8,7 +8,7 @@ logging.basicConfig(filename='run_debug.log', level=logging.DEBUG)
 script_name = "run_simulation.py"
 script_path = os.path.join(os.getcwd(), script_name)
 
-num_processes = 50 # number of subprocess
+num_processes = 10 # number of subprocess
 
 processes = []
 
@@ -25,7 +25,7 @@ for i in range(num_processes):
         stderr=subprocess.STDOUT
     )
     processes.append((p, log_file))
-    time.sleep(1)
+    time.sleep(10)
 
 for idx, (p, log_file) in enumerate(processes):
     p.wait()
