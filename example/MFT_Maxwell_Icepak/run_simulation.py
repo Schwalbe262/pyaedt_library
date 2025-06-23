@@ -83,6 +83,8 @@ class Simulation() :
 
             # 파일은 with 블록 종료 시 자동으로 닫히며, 잠금도 해제됨
 
+        print(f"==========simulation{content}==========")
+
 
     def create_design(self, name) :
         self.project = self.desktop.create_project()
@@ -91,7 +93,9 @@ class Simulation() :
 
     
     def create_input_parameter(self, param_list=None) :
-        return create_input_parameter(self.maxwell_design, param_list)
+        input_parameter = create_input_parameter(self.maxwell_design, param_list)
+        print(f"input_parameter : {input_parameter}")
+        return input_parameter
 
 
     def set_variable(self, input_parameter) :
