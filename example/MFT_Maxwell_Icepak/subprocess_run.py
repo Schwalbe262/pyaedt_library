@@ -22,8 +22,19 @@ log_dir = './simul_log'
 os.makedirs(log_dir, exist_ok=True)
 
 for i in range(num_processes):
-    
-    log_file = open(f'./simul_log/process_{i}.log', 'w')
+
+    file_path = "simulation_num.txt"
+
+    # 파일이 존재하지 않으면 생성
+    if not os.path.exists(file_path):
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write("1")
+
+    # 읽기/쓰기 모드로 파일 열기
+    with open(file_path, "r+", encoding="utf-8") as file:
+        content = int(file.read().strip())
+
+    log_file = open(f'./simul_log/process_{content}.log', 'w')
     p = subprocess.Popen(
         f'python {script_path}',
         shell=True,
