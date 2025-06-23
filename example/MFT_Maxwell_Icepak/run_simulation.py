@@ -305,9 +305,9 @@ class Simulation() :
 
 
 if __name__ == '__main__':
-    simulation_runner = Simulation()
     for i in range(5000):
         try:
+            simulation_runner = Simulation()
             # 2. create_design 메서드를 호출하여 프로젝트와 디자인을 초기화합니다.
             simulation_runner.create_design("SST_MFT")
 
