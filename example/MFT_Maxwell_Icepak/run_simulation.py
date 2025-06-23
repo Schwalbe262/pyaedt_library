@@ -308,7 +308,8 @@ class Simulation() :
 
         self.desktop.release_desktop(close_projects=True, close_on_exit=True)
 
-        # Delete the project folder to save space
+    def delete_project_folder(self):
+        time.sleep(10)
         try:
             project_folder = os.path.join(os.getcwd(), "simulation", self.PROJECT_NAME)
             if os.path.isdir(project_folder):
@@ -371,6 +372,7 @@ if __name__ == '__main__':
             simulation_runner.save_results_to_csv(simulation_runner.results_df)
 
             simulation_runner.close_project()
+            simulation_runner.delete_project_folder()
 
         except Exception as e:
             pd.set_option('display.max_rows', None)
@@ -396,10 +398,11 @@ if __name__ == '__main__':
             print(f"{simulation_runner.PROJECT_NAME} : {i} simulation Failed")
             
             simulation_runner.desktop.release_desktop(close_projects=True, close_on_exit=True)
+            simulation_runner.delete_project_folder()
+
+            time.sleep(10)
             
-            # Re-initialize for the next run
-            simulation_runner = Simulation()
-            time.sleep(1)
+
         
 
         

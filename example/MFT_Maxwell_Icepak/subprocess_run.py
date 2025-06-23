@@ -13,7 +13,7 @@ os_name = platform.system()
 if os_name == "Windows":
     num_processes = 10 # number of subprocess
 else :
-    num_processes = 40 # number of subprocess
+    num_processes = 32 # number of subprocess
 
 
 processes = []
