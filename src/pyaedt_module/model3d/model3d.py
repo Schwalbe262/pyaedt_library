@@ -1,5 +1,6 @@
 from .core import Core
 from .winding import Winding
+from .transformer_winding import Transformer_winding
 from .face import Face
 
 class Model3d :
@@ -26,3 +27,35 @@ class Model3d :
         obj = self.design.modeler.get_object_from_name(name)
 
         return obj
+    
+
+    def find_object(self, obj_list) :
+
+        """
+        
+        다른 design에 있는 model객체 불러오기
+        
+        """
+
+        """
+        example :
+        i_cold_plate_top = self.icepak_design.model3d.find_object(self.maxwell_design.cold_plate_top)
+
+        """
+
+        is_list_input = isinstance(obj_list, list)
+        processing_list = obj_list if is_list_input else [obj_list]
+
+        new_obj_list = []
+
+        for obj in processing_list :
+
+            obj_name = obj if isinstance(obj, str) else obj.name # convert object to name
+            new_obj = self.design.modeler.get_object_from_name(obj_name) # get object from name
+            if new_obj:
+                new_obj_list.append(new_obj)
+
+        if not is_list_input:
+            return new_obj_list[0] if new_obj_list else None
+
+        return new_obj_list

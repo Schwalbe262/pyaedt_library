@@ -105,3 +105,28 @@ class PostProcessing:
 
         return data
 
+    def get_convergence_report(self, setup_name="Setup1", name=None) :
+        report_file = self.design.export_convergence(setup_name=setup_name, variation_string="", file_path=None)
+        df = self._extract_data_from_last_line(report_file)
+        if name:
+            df.columns = [f"{col}{name}" for col in df.columns]
+        return df
+
+    def _extract_data_from_last_line(self, filename):
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+        last_data_line = ""
+        for line in reversed(lines):
+            if line.strip():
+                last_data_line = line
+                break
+        parts = last_data_line.split('|')
+        data = {
+            'Pass Number': [parts[0].strip()],
+            'Tetrahedra': [parts[1].strip()],
+            'Total Energy': [parts[2].strip()],
+            'Energy Error': [parts[3].strip()],
+            'Delta Energy': [parts[4].strip()]
+        }
+        return pd.DataFrame(data)
+        

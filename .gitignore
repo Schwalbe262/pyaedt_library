@@ -1,0 +1,40 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.env
+.venv
+env/
+venv/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Ansys / PyAEDT Simulation Specific
+# ----------------------------------
+
+# Simulation project files and lock files
+*.aedt
+*.aedt.lock
+*.aedb/
+*.aedtresults/
+
+# Simulation output directories (anywhere in the project)
+**/simulation/
+**/results/
+**/output/
+
+# Log files, data files, and lock files
+*.log
+simulation_results.csv
+simulation_num.txt
+simulation_results.csv.lock 

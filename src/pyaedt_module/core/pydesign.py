@@ -1,4 +1,7 @@
+from pyaedt_module.solver.maxwell3d import Maxwell3d
 from pyaedt_module.solver.hfss import HFSS
+from pyaedt_module.solver.circuit import Circuit
+from pyaedt_module.solver.icepak import Icepak
 from pyaedt_module.model3d import Model3d
 from .post_processing import PostProcessing
 
@@ -18,7 +21,20 @@ class pyDesign:
 
     
     def __getattr__(self, name):
-        return getattr(self.solver_instance, name)
+        # First, try to get the attribute from the solver instance (e.g., methods like 'create_setup')
+        if self.solver_instance:
+            try:
+                return getattr(self.solver_instance, name)
+            except AttributeError:
+                # If it's not a method/attribute on the solver, pass to check for it as a design variable
+                pass
+
+        # Second, try to get it as a design variable using __getitem__
+        try:
+            return self[name]
+        except (KeyError, TypeError):
+             # If it's not a variable either, raise the final error
+            raise AttributeError(f"'pyDesign' object and its solver have no attribute or variable '{name}'")
 
     def __dir__(self):
         default_dir = super().__dir__()
@@ -66,19 +82,41 @@ class pyDesign:
 
 
 
+
     @classmethod
     def create_design(cls, project, name=None, solver=None, solution=None):
         design = cls(project, name=name, solver=solver, solution=solution)
 
         solver = solver.lower()
-        if solver == "hfss":
+        if solver == "maxwell3d" or solver == "maxwell" :
+            design._setup_maxwell()
+        elif solver == "hfss":
             design._setup_hfss()
+        elif solver == "circuit":
+            design._setup_circuit()
+        elif solver == "icepak":
+            design._setup_icepak()
         
         return design
+    
 
+    def _setup_maxwell(self):
+        if self.solution is None:
+            self.solution = "EddyCurrent"
+
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Maxwell3d(project=None, design=self.name, solution_type=self.solution)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+            
+            
     def _setup_hfss(self):
         if self.solution is None:
             self.solution = "HFSS Terminal Network"
+        # self.project.InsertDesign("HFSS", self.name, self.solution, "")
+        # self.solver_instance = self.project.SetActiveDesign(self.name)
 
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         self.solver_instance = HFSS(project=None, design=self.name, solution_type=self.solution)
@@ -88,13 +126,31 @@ class pyDesign:
         self._get_module()
         
 
+    def _setup_circuit(self):
+        
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Circuit(project=None, design=self.name)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+
+
+    def _setup_icepak(self):
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Icepak(project=None, design=self.name)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+
+
     def _get_module(self):
         self.model3d = Model3d(self)
         self.post_processing = PostProcessing(self)
 
 
-    def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit="mm"):
-
+    def get_random_value(self, lower=None, upper=None, resolution=None):
         resolution_str = str(resolution)
         if '.' in resolution_str:
             precision = len(resolution_str.split('.')[1])
@@ -104,11 +160,42 @@ class pyDesign:
         possible_values = np.arange(lower, upper + resolution, resolution)
         value = round(np.random.choice(possible_values), precision)
 
-        if resolution == 1 :
+        if resolution == 1:
             value = int(value)
+            
+        return value
 
-        if variable_name != None :
+
+    def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit=""):
+        
+        value = self.get_random_value(lower, upper, resolution)
+
+        if variable_name != None:
             self[variable_name] = f"{value}{unit}"
+            self.variable_name = value
 
         return value
 
+
+
+    def set_variable(self, variable_name=None, value=None, unit=""):
+
+        if variable_name != None :
+            self[variable_name] = f"{value}{unit}"
+            self.variable_name = value
+
+        return value
+    
+
+
+    def get_active_design(self) :
+
+        design_name = self.project.desktop.active_design().GetName()
+        design_type = self.project.desktop.active_design().GetDesignType()
+
+        if design_type == "Icepak" :
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="icepak")
+        else :
+            return False
+
+        return design_obj

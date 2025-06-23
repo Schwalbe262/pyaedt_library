@@ -70,3 +70,4 @@ class pyDesktop(AEDTDesktop) :
         project = pyProject(self)
         self.projects.append(project)
         return project
+

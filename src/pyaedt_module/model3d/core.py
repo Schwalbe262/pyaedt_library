@@ -25,6 +25,24 @@ class Core :
         Returns:
             object: 생성된 코어 객체
         """
+
+        """
+        사용 예시
+
+        core_params = {
+            "w1": "w1", # 변수가 아니라 값을 넣어도 됨
+            "l1_leg": "l1",
+            "l1_top": "l1",
+            "l2": "l2",
+            "h1": "h1",
+            "mat": "ferrite"
+        }
+
+        self.core = modeler.create_coretype_core(name="Core", **core_params)
+        
+        """
+
+
         # variable setting
         core_w1 = kwargs.get("w1", "60mm") # core_w1
         core_l1_leg = kwargs.get("l1_leg", "25mm") # core_l1_leg
