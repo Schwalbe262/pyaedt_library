@@ -343,9 +343,11 @@ def main():
 
         
 if __name__ == '__main__':
-    try :
-        main()
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    for i in range(5000):
+        try :
+            ansys_run = main()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            del ansys_run
 
         

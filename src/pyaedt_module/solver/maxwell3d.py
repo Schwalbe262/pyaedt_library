@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import time
 import re
+import os
 
 
 class Maxwell3d(AEDTMaxwell3d) :
@@ -44,8 +45,9 @@ class Maxwell3d(AEDTMaxwell3d) :
             # Handle case where report is not created and not found
             return pd.DataFrame()
 
-        export_data = self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
-        data = pd.read_csv(export_data)
+        export_path = os.path.join(dir, f"{report.plot_name}.csv")
+        self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
+        data = pd.read_csv(export_path)
         
         # Create a mapping from the expression in the report to the desired new name
         rename_mapping = {}
@@ -138,8 +140,9 @@ class Maxwell3d(AEDTMaxwell3d) :
              # Return an empty DataFrame with the expected column names.
              return None, pd.DataFrame(columns=name_list)
 
-        export_data = self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
-        data = pd.read_csv(export_data)
+        export_path = os.path.join(dir, f"{report.plot_name}.csv")
+        self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
+        data = pd.read_csv(export_path)
 
         # Create a mapping from the actual column names in the CSV to the desired names
         rename_mapping = {}
