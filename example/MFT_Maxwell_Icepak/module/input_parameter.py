@@ -33,7 +33,23 @@ def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
     return offset
 
 
-def create_input_parameter(design) :
+def create_input_parameter(design, param_list=None):
+    if param_list is not None:
+        keys = [
+            "N1", "N2", "N1_layer", "N2_layer", "per", "w1", "l1", "l2", "l2_gap", "h1",
+            "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
+            "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
+            "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
+            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
+            "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
+            "cold_plate_z2", "mold_thick", "thermal_conductivity"
+        ]
+        
+        if len(param_list) != len(keys):
+            raise ValueError(f"Input list must have exactly {len(keys)} elements, but got {len(param_list)}.")
+            
+        input_parameter = dict(zip(keys, param_list))
+        return input_parameter
 
     N1 = design.get_random_value(lower=5, upper=10, resolution=1)
     N2 = N1
@@ -54,16 +70,16 @@ def create_input_parameter(design) :
     N1_coil_diameter, N1_coil_zgap = calculate_coil_parameter(N1, N1_layer, h1, N1_height_ratio, N1_fill_factor)
     N2_coil_diameter, N2_coil_zgap = calculate_coil_parameter(N2, N2_layer, h1, N2_height_ratio, N2_fill_factor)
 
-    N1_space_w = design.get_random_value(lower=1, upper=30, resolution=0.1)
-    N1_space_l = design.get_random_value(lower=1, upper=30, resolution=0.1)
-    N2_space_w = design.get_random_value(lower=1, upper=30, resolution=0.1)
-    N2_space_l = design.get_random_value(lower=1, upper=30, resolution=0.1)
+    N1_space_w = design.get_random_value(lower=3, upper=30, resolution=0.1)
+    N1_space_l = design.get_random_value(lower=3, upper=30, resolution=0.1)
+    N2_space_w = design.get_random_value(lower=3, upper=30, resolution=0.1)
+    N2_space_l = design.get_random_value(lower=3, upper=30, resolution=0.1)
     
     N1_layer_gap = design.get_random_value(lower=1, upper=10, resolution=0.1)
     N2_layer_gap = design.get_random_value(lower=1, upper=10, resolution=0.1)
 
-    N1_offset_ratio = design.get_random_value(lower=-0.95, upper=0.95, resolution=0.01)
-    N2_offset_ratio = design.get_random_value(lower=-0.95, upper=0.95, resolution=0.01)
+    N1_offset_ratio = design.get_random_value(lower=-0.8, upper=0.8, resolution=0.01)
+    N2_offset_ratio = design.get_random_value(lower=-0.8, upper=0.8, resolution=0.01)
 
     N1_offset = calculate_coil_offset(N1, N1_layer, h1, N1_height_ratio, N1_offset_ratio)
     N2_offset = calculate_coil_offset(N2, N2_layer, h1, N2_height_ratio, N2_offset_ratio)

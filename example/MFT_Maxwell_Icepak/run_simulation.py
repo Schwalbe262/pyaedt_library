@@ -90,8 +90,8 @@ class Simulation() :
         return self.maxwell_design
 
     
-    def create_input_parameter(self) :
-        return create_input_parameter(self.maxwell_design)
+    def create_input_parameter(self, param_list=None) :
+        return create_input_parameter(self.maxwell_design, param_list)
 
 
     def set_variable(self, input_parameter) :
