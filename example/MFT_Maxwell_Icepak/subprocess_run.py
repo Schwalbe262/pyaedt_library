@@ -13,7 +13,7 @@ os_name = platform.system()
 if os_name == "Windows":
     num_processes = 10 # number of subprocess
 else :
-    num_processes = 36 # number of subprocess
+    num_processes = 40 # number of subprocess
 
 
 processes = []
@@ -23,7 +23,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 for i in range(num_processes):
 
-    file_path = "simulation_num.txt"
+    file_path = "simulog_num.txt"
 
     # 파일이 존재하지 않으면 생성
     if not os.path.exists(file_path):
@@ -32,7 +32,15 @@ for i in range(num_processes):
 
     # 읽기/쓰기 모드로 파일 열기
     with open(file_path, "r+", encoding="utf-8") as file:
-        content = int(file.read().strip())
+
+            # 파일에서 값 읽기
+            content = int(file.read().strip())
+            content += 1
+
+            # 파일 포인터를 처음으로 되돌리고, 파일 내용 초기화 후 새 값 쓰기
+            file.seek(0)
+            file.truncate()
+            file.write(str(content))
 
     log_file = open(f'./simul_log/process_{content}.log', 'w')
     p = subprocess.Popen(
