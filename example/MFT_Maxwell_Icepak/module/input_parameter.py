@@ -1,4 +1,4 @@
- import math
+import math
 
 def calculate_coil_parameter(N, N_layer, h1, height_ratio, fill_factor):
     height = h1 * height_ratio

@@ -1,4 +1,4 @@
- from pyaedt_module.model3d.core import Core
+from pyaedt_module.model3d.core import Core
 from pyaedt_module.model3d.transformer_winding import Transformer_winding
 import math
 
