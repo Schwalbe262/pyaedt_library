@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 
 os_name = platform.system()
 if os_name == "Windows":
@@ -18,7 +19,6 @@ import copy
 
 import pandas as pd
 
-import platform
 import csv
 from filelock import FileLock
 import traceback
