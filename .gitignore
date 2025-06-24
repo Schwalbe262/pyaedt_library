@@ -35,6 +35,7 @@ venv/
 
 # Log files, data files, and lock files
 *.log
+**/data/*.csv
 simulation_results.csv
 simulation_num.txt
-simulation_results.csv.lock 
+simulation_results.csv.lock
