@@ -111,14 +111,15 @@ class Simulation() :
 
     def set_maxwell_analysis(self) :
         self.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.setup.props["MaximumPasses"] = 10
+        self.setup.props["MaximumPasses"] = 3 # 10
         self.setup.props["MinimumPasses"] = 1
         self.setup.props["PercentError"] = 2.5
         self.setup.props["Frequency"] = "30kHz"
         self.maxwell_design.freq = 30e+3
 
     def create_core(self):
-        self.maxwell_design.set_power_ferrite(cm=0.2435*1e-3, x=2.2, y=2.299)
+        # self.maxwell_design.set_power_ferrite(cm=0.2435*1e-3, x=2.2, y=2.299)
+        self.maxwell_design.set_power_ferrite(cm=2.315, x=1.4472, y=2.4769)
         self.maxwell_design.core = create_core_model(self.maxwell_design)
 
     def create_face(self, design_obj):
@@ -199,6 +200,9 @@ class Simulation() :
 
     def second_simulation(self):
         self.maxwell_design.skin_depth_mesh.delete()
+        oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
+        oDesign = oProject.SetActiveDesign(self.maxwell_design.design_name)
+        oDesign.DeleteFullVariation("All", False)
         V = 1000
         Im = V/2/3.141592/30e+3/(float(self.results_df["Lmt"])*1e-6)
 

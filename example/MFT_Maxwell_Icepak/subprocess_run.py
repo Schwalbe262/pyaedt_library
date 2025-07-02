@@ -13,7 +13,7 @@ os_name = platform.system()
 if os_name == "Windows":
     num_processes = 10 # number of subprocess
 else :
-    num_processes = 32 # number of subprocess
+    num_processes = 36 # number of subprocess
 
 
 processes = []
@@ -50,7 +50,7 @@ for i in range(num_processes):
         stderr=subprocess.STDOUT
     )
     processes.append((p, log_file))
-    time.sleep(10)
+    time.sleep(30)
 
 for idx, (p, log_file) in enumerate(processes):
     p.wait()

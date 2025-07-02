@@ -51,7 +51,7 @@ def create_input_parameter(design, param_list=None):
         input_parameter = dict(zip(keys, param_list))
         return input_parameter
 
-    N1 = design.get_random_value(lower=5, upper=10, resolution=1)
+    N1 = design.get_random_value(lower=4, upper=10, resolution=1)
     N2 = N1
     N1_layer = design.get_random_value(lower=1, upper=2, resolution=1)
     N2_layer = design.get_random_value(lower=1, upper=2, resolution=1)
@@ -96,9 +96,9 @@ def create_input_parameter(design, param_list=None):
     cold_plate_x = design.get_random_value(lower=0, upper=30, resolution=0.1)
     cold_plate_y = design.get_random_value(lower=0, upper=30, resolution=0.1)
     cold_plate_z1 = design.get_random_value(lower=10, upper=50, resolution=0.1)
-    cold_plate_z2 = design.get_random_value(lower=0.1, upper=0.5, resolution=0.01)
+    cold_plate_z2 = design.get_random_value(lower=0.0, upper=0.5, resolution=0.01)
 
-    thermal_conductivity = design.get_random_value(lower=0.2, upper=2, resolution=0.01)
+    thermal_conductivity = design.get_random_value(lower=0.2, upper=1.5, resolution=0.01)
     
 
     input_parameter = {
