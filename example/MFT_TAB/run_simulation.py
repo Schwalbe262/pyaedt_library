@@ -203,12 +203,13 @@ class Simulation() :
         oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
         oDesign = oProject.SetActiveDesign(self.maxwell_design.design_name)
         oDesign.DeleteFullVariation("All", False)
-        V = 1000
-        Im = V/2/3.141592/30e+3/(float(self.results_df["Lmt"])*1e-6)
+        V = 750
+        Im = V/2/3.141592/30e+3/(float(self.results_df["Lmt1"])*1e-6)
 
         # re excitation
         self.maxwell_design.Tx_winding["Current"] = f'{Im} * sqrt(2)A'
-        self.maxwell_design.Rx_winding["Current"] = '0 * sqrt(2)A'
+        self.maxwell_design.Rx1_winding["Current"] = '0 * sqrt(2)A'
+        self.maxwell_design.Rx2_winding["Current"] = '0 * sqrt(2)A'
 
         self.setup.props["MaximumPasses"] = 10 # 10
         self.setup.props["PercentError"] = 1
@@ -245,6 +246,7 @@ class Simulation() :
 
         # Assign EM Loss from Maxwell analysis to Icepak thermal simulation
         self.icepak_design.assign_EM_loss(name="Coreloss", objects=[self.maxwell_design.core], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
+        self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
         # self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
 
 
@@ -259,11 +261,15 @@ class Simulation() :
         self.icepak_design.cold_plate_bottom = self.icepak_design.model3d.find_object(self.maxwell_design.cold_plate_bottom)
         self.icepak_design.winding1 = self.icepak_design.model3d.find_object(self.maxwell_design.winding1)
         self.icepak_design.winding2 = self.icepak_design.model3d.find_object(self.maxwell_design.winding2)
+        self.icepak_design.winding3 = self.icepak_design.model3d.find_object(self.maxwell_design.winding3)
         self.icepak_design.core = self.icepak_design.model3d.find_object(self.maxwell_design.core)  
         self.icepak_design.leg_left = self.icepak_design.model3d.find_object(self.maxwell_design.leg_left)
         self.icepak_design.leg_right = self.icepak_design.model3d.find_object(self.maxwell_design.leg_right)
-        self.icepak_design.leg_top = self.icepak_design.model3d.find_object(self.maxwell_design.leg_top)
-        self.icepak_design.leg_bottom = self.icepak_design.model3d.find_object(self.maxwell_design.leg_bottom)
+        self.icepak_design.leg_center = self.icepak_design.model3d.find_object(self.maxwell_design.leg_center)
+        self.icepak_design.leg_top_left = self.icepak_design.model3d.find_object(self.maxwell_design.leg_top_left)
+        self.icepak_design.leg_top_right = self.icepak_design.model3d.find_object(self.maxwell_design.leg_top_right)
+        self.icepak_design.leg_bottom_left = self.icepak_design.model3d.find_object(self.maxwell_design.leg_bottom_left)
+        self.icepak_design.leg_bottom_right = self.icepak_design.model3d.find_object(self.maxwell_design.leg_bottom_right)
 
         # Assign fixed temperature boundary condition to the cold plates
         self.icepak_design.assign_icepak_source(
@@ -271,12 +277,6 @@ class Simulation() :
             thermal_condition="Fixed Temperature", 
             assignment_value="AmbientTemp", 
             boundary_name="cold_plate"
-        )
-        self.icepak_design.assign_icepak_source(
-            assignment=[self.icepak_design.winding1, self.icepak_design.winding2], 
-            thermal_condition="Fixed Temperature", 
-            assignment_value="AmbientTemp", 
-            boundary_name="winding"
         )
 
     def analyze_icepak(self):
