@@ -24,7 +24,7 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         return power_ferrite
 
-    def get_magnetic_parameter(self, dir=None, parameters=[], mod="write", import_report=None) :
+    def get_magnetic_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="magnetic_report") :
         """
         example :
         parameters1 = []
@@ -33,7 +33,7 @@ class Maxwell3d(AEDTMaxwell3d) :
         """
         if mod == "write" :
             result_expressions = [matrix for matrix, _, _ in parameters]
-            report = self._create_report(report_name = "magnetic_report", result_expressions = result_expressions, category = None)
+            report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = None)
         elif mod == "read" :
             report = import_report
 
@@ -105,7 +105,7 @@ class Maxwell3d(AEDTMaxwell3d) :
         return report, output_df
 
 
-    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None) :
+    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="calculator_report") :
         """
         example :
         parameters2 = []
@@ -118,7 +118,7 @@ class Maxwell3d(AEDTMaxwell3d) :
         
         if mod == "write" :
             result_expressions, name_list = self._add_calculator_expression(parameters=parameters)
-            report = self._create_report(report_name = "calculator_report", result_expressions = result_expressions, category = "Fields")
+            report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = "Fields")
         elif mod == "read" :
             report = import_report
             # In "read" mode, we must reconstruct the expression and name lists
