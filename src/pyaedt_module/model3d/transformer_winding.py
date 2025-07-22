@@ -134,6 +134,7 @@ class Transformer_winding:
         terminal_position = kwargs.get("terminal_position", None)
         if terminal_position is None :
             terminal_length = kwargs.get("terminal_length", "30mm")
+            terminal = False
         
 
         # offset을 x, y, z 각 축에 대한 리스트로 처리합니다.

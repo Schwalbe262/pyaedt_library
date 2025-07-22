@@ -42,7 +42,7 @@ def create_face(design):
 
     leg_center = design.modeler.create_rectangle(
         orientation = "XY",
-        origin = ['-w1/2','(l1_center/2)', '0'],
+        origin = ['-w1/2','-(l1_center/2)', '0'],
         sizes = ['w1','l1_center']
     )
     leg_center.model = False
@@ -123,10 +123,21 @@ def create_all_windings(design):
         "color": [255, 50, 50],
         "transparency": 0,
         "offset": ["0mm", "0mm", f"{offset1}mm + ({design.N1_offset}mm)"],
-        "terminal_position": "w1/2 + 150mm",
+        # "terminal_position": "w1/2 + 150mm",
         "Num": 6
     }
     points1 = modeler.winding_points(**winding_params1)
+    first_point = points1[0].copy()
+    first_point[2] = "h1/2 + N1_coil_diameter/2"
+    last_point = points1[-1].copy() 
+    last_point[2] = "-h1/2 - N1_coil_diameter/2"
+    points1 = [first_point] + points1 + [last_point]
+    first_point = points1[0].copy()
+    first_point[0] = "w1/2 + 200mm"
+    last_point = points1[-1].copy() 
+    last_point[0] = "w1/2 + 200mm"
+    points1 = [first_point] + points1 + [last_point]
+    
     winding1 = modeler.create_polyline(name="winding1", points=points1, **winding_params1)
     winding1.material_name = "copper"
     print("Winding 'winding1' created successfully.")
@@ -134,22 +145,24 @@ def create_all_windings(design):
     # --- Winding 2 ---
     offset2 = offset_calculation(
         design.N2_coil_diameter,
-        design.h1,
+        design.h1/2,
         design.N2_height_ratio
     )
     winding_params2 = {
         "N": design.N2,
         "N_layer": design.N2_layer,
-        "x": "w1 + 2*N2_space_w",
-        "y": "l1_side + 2*N2_space_l",
+        "x": "w1 + 2*N2_space_w + " +
+             "2*N1_space_w + 2*N1_layer * (N1_coil_diameter) + 2*(N1_layer - 1) * N1_layer_gap + 2*mold_thick",
+        "y": "l1_center + 2*N2_space_l + " +
+             "2*N1_space_l + 2*N1_layer * (N1_coil_diameter) + 2*(N1_layer - 1) * N1_layer_gap + 2*mold_thick",
         "coil_diameter": "N2_coil_diameter",
         "coil_zgap": "N2_coil_zgap",
         "coil_layer_x_gap": "N2_layer_gap",
         "coil_layer_y_gap": "N2_layer_gap",
         "color": [50, 50, 255],
         "transparency": 0,
-        "offset": ["0mm", "-((l1_center+l1_side)/2 + l2)", f"{offset2}mm + ({design.N2_offset}mm)"],
-        "terminal_position": "w1/2 + 150mm",
+        "offset": ["0mm", "0mm", f"h1/4 + {offset2}mm + ({design.N2_offset}mm)"],
+        "terminal_position": "w1/2 + 200mm",
         "Num": 6
     }
     points2 = modeler.winding_points(**winding_params2)
@@ -160,22 +173,24 @@ def create_all_windings(design):
     # --- Winding 3 ---
     offset2 = offset_calculation(
         design.N2_coil_diameter,
-        design.h1,
+        design.h1/2,
         design.N2_height_ratio
     )
     winding_params3 = {
         "N": design.N2,
         "N_layer": design.N2_layer,
-        "x": "w1 + 2*N2_space_w",
-        "y": "l1_side + 2*N2_space_l",
+        "x": "w1 + 2*N2_space_w + " +
+             "2*N1_space_w + 2*N1_layer * (N1_coil_diameter) + 2*(N1_layer - 1) * N1_layer_gap + 2*mold_thick",
+        "y": "l1_center + 2*N2_space_l + " +
+             "2*N1_space_l + 2*N1_layer * (N1_coil_diameter) + 2*(N1_layer - 1) * N1_layer_gap + 2*mold_thick",
         "coil_diameter": "N2_coil_diameter",
         "coil_zgap": "N2_coil_zgap",
         "coil_layer_x_gap": "N2_layer_gap",
         "coil_layer_y_gap": "N2_layer_gap",
         "color": [50, 50, 255],
         "transparency": 0,
-        "offset": ["0mm", "((l1_center+l1_side)/2 + l2)", f"{offset2}mm + ({design.N2_offset}mm)"],
-        "terminal_position": "w1/2 + 150mm",
+        "offset": ["0mm", "0mm", f"-h1/4 + {offset2}mm + ({design.N2_offset}mm)"],
+        "terminal_position": "w1/2 + 200mm",
         "Num": 6
     }
     points3 = modeler.winding_points(**winding_params3)

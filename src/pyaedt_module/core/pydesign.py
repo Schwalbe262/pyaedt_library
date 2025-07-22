@@ -195,7 +195,31 @@ class pyDesign:
 
         if design_type == "Icepak" :
             design_obj = pyDesign.create_design(self.project, name=design_name, solver="icepak")
+        elif design_type == "Maxwell 3D" :
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell3d")
+        elif design_type == "HFSS" :
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="hfss")
         else :
             return False
 
         return design_obj
+    
+
+
+    def delete_mesh(self, mesh_obj):
+        
+        # mesh : mesh object or mesh name(str)
+
+        oModule = self.odesign.GetModule("MeshSetup")
+
+        # mesh_obj가 리스트가 아닌 경우 리스트로 변환
+        if not isinstance(mesh_obj, list):
+            mesh_obj = [mesh_obj]
+
+        for mesh in mesh_obj:
+            if isinstance(mesh, str): # name case
+                oModule.DeleteOp([mesh])
+            elif isinstance(mesh.name, str):
+                oModule.DeleteOp([mesh.name]) 
+            else:
+                raise ValueError("mesh_obj must be a mesh object or a mesh name(str)")
