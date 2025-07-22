@@ -33,7 +33,7 @@ def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
     return offset
 
 
-def create_input_parameter(design, param_list=None):
+def create_input_parameter_for_test(design, param_list=None):
     if param_list is not None:
         keys = [
             "N1", "N2", "N1_layer", "N2_layer", "freq", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
@@ -42,7 +42,7 @@ def create_input_parameter(design, param_list=None):
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
             "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
             "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity"
+            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio"
         ]
         
         if len(param_list) != len(keys):
@@ -105,6 +105,8 @@ def create_input_parameter(design, param_list=None):
     cold_plate_z2 = 0
 
     thermal_conductivity = 0.4
+    winding_thermal_ratio = 0.5
+    wind_speed = 5
 
 
     input_parameter = {
@@ -155,7 +157,9 @@ def create_input_parameter(design, param_list=None):
         "cold_plate_z2": cold_plate_z2,
 
         "mold_thick": mold_thick,
-        "thermal_conductivity": thermal_conductivity
+        "thermal_conductivity": thermal_conductivity,
+        "winding_thermal_ratio": winding_thermal_ratio,
+        "wind_speed": wind_speed
     }
 
 
@@ -163,7 +167,7 @@ def create_input_parameter(design, param_list=None):
     
 
 
-def create_input_parameter_for_test(design, param_list=None):
+def create_input_parameter(design, param_list=None):
     if param_list is not None:
         keys = [
             "N1", "N2", "N1_layer", "N2_layer", "freq", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
@@ -172,7 +176,7 @@ def create_input_parameter_for_test(design, param_list=None):
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
             "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
             "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity"
+            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio"
         ]
         
         if len(param_list) != len(keys):
@@ -181,7 +185,7 @@ def create_input_parameter_for_test(design, param_list=None):
         input_parameter = dict(zip(keys, param_list))
         return input_parameter
 
-    N1 = design.get_random_value(lower=4, upper=12, resolution=1)
+    N1 = design.get_random_value(lower=4, upper=10, resolution=1)
     N2 = N1
     N1_layer = design.get_random_value(lower=1, upper=1, resolution=1)
     N2_layer = design.get_random_value(lower=1, upper=1, resolution=1)
@@ -229,12 +233,14 @@ def create_input_parameter_for_test(design, param_list=None):
     h1_gap = (h1 - h1*N1_height_ratio)/2 - abs(N1_offset)
     h2_gap = (h1 - h1*N2_height_ratio)/2 - abs(N2_offset)
 
-    cold_plate_x = design.get_random_value(lower=0, upper=30, resolution=0.1)
-    cold_plate_y = design.get_random_value(lower=0, upper=30, resolution=0.1)
+    cold_plate_x = design.get_random_value(lower=0, upper=0, resolution=0.1)
+    cold_plate_y = design.get_random_value(lower=0, upper=0, resolution=0.1)
     cold_plate_z1 = design.get_random_value(lower=10, upper=50, resolution=0.1)
     cold_plate_z2 = design.get_random_value(lower=0.0, upper=0.3, resolution=0.01)
 
     thermal_conductivity = design.get_random_value(lower=0.2, upper=1.5, resolution=0.01)
+    winding_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
+    wind_speed = design.get_random_value(lower=1, upper=20, resolution=0.1)
 
 
     input_parameter = {
@@ -285,7 +291,9 @@ def create_input_parameter_for_test(design, param_list=None):
         "cold_plate_z2": cold_plate_z2,
 
         "mold_thick": mold_thick,
-        "thermal_conductivity": thermal_conductivity
+        "thermal_conductivity": thermal_conductivity,
+        "winding_thermal_ratio": winding_thermal_ratio,
+        "wind_speed": wind_speed
     }
 
 

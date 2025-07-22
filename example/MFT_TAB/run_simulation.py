@@ -48,9 +48,8 @@ class Simulation() :
 
     def __init__(self) :
 
-        self.NUM_CORE = 2
+        self.NUM_CORE = 4
         self.NUM_TASK = 1
-        self.freq = 30e3
 
         file_path = "simulation_num.txt"
 
@@ -110,30 +109,32 @@ class Simulation() :
         set_design_variables(self.maxwell_design, input_parameter)
 
     def set_maxwell_analysis(self) :
-        self.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.setup.props["MaximumPasses"] = 10 # 10
-        self.setup.props["MinimumPasses"] = 1
-        self.setup.props["PercentError"] = 2.5
-        self.setup.props["Frequency"] = "30kHz"
-        self.maxwell_design.freq = 30e+3
+        self.maxwell_design.setup = self.maxwell_design.create_setup(name = "Setup1")
+        self.maxwell_design.setup.properties["Max. Number of Passes"] = 3 # 10
+        self.maxwell_design.setup.properties["Min. Number of Passes"] = 1
+        self.maxwell_design.setup.properties["Percent Error"] = 5 # 2.5
+        self.maxwell_design.setup.properties["Frequency Setup"] = f"{self.maxwell_design.frequency}kHz"
 
     def create_core(self):
         # self.maxwell_design.set_power_ferrite(cm=0.2435*1e-3, x=2.2, y=2.299)
         self.maxwell_design.set_power_ferrite(cm=2.315, x=1.4472, y=2.4769)
         self.maxwell_design.core = create_core_model(self.maxwell_design)
 
+
     def create_face(self, design_obj):
         create_face(design_obj)
 
+
     def create_windings(self):
         """Creates both primary and secondary windings."""
-        self.maxwell_design.winding1, self.maxwell_design.winding2 = create_all_windings(self.maxwell_design)
+        self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3 = create_all_windings(self.maxwell_design)
+
 
     def create_mold(self):
         self.maxwell_design.mold = create_mold(self.maxwell_design)
         self.maxwell_design.modeler.subtract(
 						blank_list = [self.maxwell_design.mold],
-						tool_list = [self.maxwell_design.core, self.maxwell_design.winding1, self.maxwell_design.winding2],
+						tool_list = [self.maxwell_design.core, self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3],
 						keep_originals = True
 					)
 
@@ -151,9 +152,9 @@ class Simulation() :
 
     def assign_excitations(self):
         """Identifies terminals and assigns all excitations."""
-        self.maxwell_design.Tx_winding, self.maxwell_design.Rx_winding = assign_excitations(self.maxwell_design, self.maxwell_design.winding1, self.maxwell_design.winding2)
+        self.maxwell_design.Tx_winding, self.maxwell_design.Rx_winding1, self.maxwell_design.Rx_winding2 = assign_excitations(self.maxwell_design, self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3)
 
-    def analyze_maxwell(self):
+    def analyze_maxwell(self, design):
         current_dir = os.getcwd()
         folder_path = os.path.join(current_dir, "simulation", f"{self.PROJECT_NAME}")
         os.makedirs(folder_path, exist_ok=True)  # 폴더가 없으면 생성
@@ -162,7 +163,7 @@ class Simulation() :
         
         start_time = time.time()
         print(f"Maxwell analysis started...")
-        self.maxwell_design.analyze()
+        design.analyze()
         end_time = time.time()
         print(f"Maxwell analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
@@ -199,22 +200,35 @@ class Simulation() :
 
 
     def second_simulation(self):
-        self.maxwell_design.skin_depth_mesh.delete()
+
         oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
-        oDesign = oProject.SetActiveDesign(self.maxwell_design.design_name)
-        oDesign.DeleteFullVariation("All", False)
+        oProject.CopyDesign(self.maxwell_design.name)
+        oProject.Paste()
+
+        self.maxwell_design2 = self.maxwell_design.get_active_design()
+
+        oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
+        oDesign = oProject.SetActiveDesign(self.maxwell_design2.design_name)
+
+        self.maxwell_design2.delete_mesh(self.maxwell_design.skin_depth_mesh)
+        
         V = 750
-        Im = V/2/3.141592/30e+3/(float(self.results_df["Lmt1"])*1e-6)
+        Im = V/2/3.141592/self.maxwell_design.frequency/1e3/(float(self.results_df["Lmt1"])*1e-6)
 
         # re excitation
-        self.maxwell_design.Tx_winding["Current"] = f'{Im} * sqrt(2)A'
-        self.maxwell_design.Rx1_winding["Current"] = '0 * sqrt(2)A'
-        self.maxwell_design.Rx2_winding["Current"] = '0 * sqrt(2)A'
+        excitation_list=[self.maxwell_design.Tx_winding.name, self.maxwell_design.Rx_winding1.name, self.maxwell_design.Rx_winding2.name]
+        [self.maxwell_design2.Tx_winding, self.maxwell_design2.Rx_winding1, self.maxwell_design2.Rx_winding2] = self.maxwell_design2.get_excitation(excitation_name=excitation_list)
 
-        self.setup.props["MaximumPasses"] = 10 # 10
-        self.setup.props["PercentError"] = 1
+        self.maxwell_design2.Tx_winding["Current"] = f'{Im} * sqrt(2)A'
+        self.maxwell_design2.Rx_winding1["Current"] = '0 * sqrt(2)A'
+        self.maxwell_design2.Rx_winding2["Current"] = '0 * sqrt(2)A'
 
-        self.analyze_maxwell()
+        self.maxwell_design2.setup = self.maxwell_design2.get_setup(name="Setup1")
+        self.maxwell_design2.setup.properties["Max. Number of Passes"] = 10 # 10
+        self.maxwell_design2.setup.properties["Percent Error"] = 1 # 2.5
+
+
+        self.analyze_maxwell(self.maxwell_design2)
         self.get_simulation_results(input=False, step=2)
 
     def create_icepak(self):
@@ -233,7 +247,7 @@ class Simulation() :
     def setup_icepak_analysis(self):
         """Sets up the Icepak analysis, including loss mapping and boundary conditions."""
 
-        self.icepak_design.set_ambient_temp(temp=50)
+        self.icepak_design.set_ambient_temp(temp=30)
 
         # Recreate non-model sheet objects in Icepak for result evaluation
         create_face(self.icepak_design)
@@ -245,16 +259,19 @@ class Simulation() :
         oModule.DeleteBoundaries(["EMLoss1"])
 
         # Assign EM Loss from Maxwell analysis to Icepak thermal simulation
-        self.icepak_design.assign_EM_loss(name="Coreloss", objects=[self.maxwell_design.core], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
-        self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
+        self.icepak_design.assign_EM_loss(name="Coreloss", objects=[self.maxwell_design.core], design=self.maxwell_design2, frequency=self.maxwell_design.frequency*1e+3, loss_mul=1)
+        self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3], 
+                                          design=self.maxwell_design2, frequency=self.maxwell_design.frequency*1e+3, loss_mul=self.maxwell_design.winding_thermal_ratio)
         # self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
 
+        # boundary setup
+        self.icepak_design.boundaries[1].properties["X Velocity"] = f"{self.maxwell_design.wind_speed}m_per_sec"
 
         # Configure Icepak analysis setup
-        icepak_setup = self.icepak_design.get_setup(name="Setup1")
-        icepak_setup.props["Flow Regime"] = "Turbulent"
-        icepak_setup.props["Include Gravity"] = True
-        icepak_setup.props["Solution Initialization - Z Velocity"] = "0.1m_per_sec"
+        self.icepak_design.icepak_cetup = self.icepak_design.get_setup(name="Setup1")
+        self.icepak_design.icepak_cetup.props["Flow Regime"] = "Turbulent"
+        self.icepak_design.icepak_cetup.props["Include Gravity"] = True
+        self.icepak_design.icepak_cetup.props["Solution Initialization - Z Velocity"] = "0.1m_per_sec"
 
         # Map cold plate objects from Maxwell to Icepak
         self.icepak_design.cold_plate_top = self.icepak_design.model3d.find_object(self.maxwell_design.cold_plate_top)
@@ -332,7 +349,7 @@ if __name__ == '__main__':
 
             # 3. 이제 입력 매개변수를 생성할 수 있습니다.
             input_parameters = simulation_runner.create_input_parameter()
-            
+
             # 4. 생성된 파라미터를 Simulation 객체와 Ansys 디자인에 설정합니다.
             simulation_runner.set_variable(input_parameters)
 
@@ -341,6 +358,7 @@ if __name__ == '__main__':
 
             # 6. 모델을 생성합니다.
             simulation_runner.create_core()
+
             simulation_runner.create_face(simulation_runner.maxwell_design)
             simulation_runner.create_windings()
             simulation_runner.create_mold()
@@ -352,7 +370,7 @@ if __name__ == '__main__':
             simulation_runner.assign_excitations()
 
             # 8. 해석 설정 및 실행
-            simulation_runner.analyze_maxwell()
+            simulation_runner.analyze_maxwell(simulation_runner.maxwell_design)
 
             # 9. 결과 리포팅
             simulation_runner.get_simulation_results(input=True)

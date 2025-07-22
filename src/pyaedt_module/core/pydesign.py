@@ -223,7 +223,8 @@ class pyDesign:
                 oModule.DeleteOp([mesh.name]) 
             else:
                 raise ValueError("mesh_obj must be a mesh object or a mesh name(str)")
-            
+    
+
 
 
     def get_excitation(self, excitation_name=None):
@@ -234,16 +235,21 @@ class pyDesign:
             excitation_name (str or list): Name or list of names of excitations to get
             
         Returns:
-            list: List of excitation objects in same order as input names
+            object or list: Single excitation object if str input, list of objects if list input
         """
         
-        # Convert single name to list
-        if isinstance(excitation_name, str):
-            excitation_name = [excitation_name]
-        elif excitation_name is None:
+        # Return empty list if no name provided
+        if excitation_name is None:
             return []
             
-        # Get excitation objects in order of input names
+        # Handle single name case
+        if isinstance(excitation_name, str):
+            if excitation_name in self.excitation_objects:
+                return self.excitation_objects[excitation_name]
+            else:
+                raise ValueError(f"Excitation '{excitation_name}' not found")
+                
+        # Handle list of names case
         excitation_list = []
         for name in excitation_name:
             if name in self.excitation_objects:
