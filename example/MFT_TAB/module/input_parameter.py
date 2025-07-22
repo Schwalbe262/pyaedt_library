@@ -185,13 +185,13 @@ def create_input_parameter(design, param_list=None):
         input_parameter = dict(zip(keys, param_list))
         return input_parameter
 
-    N1 = design.get_random_value(lower=4, upper=10, resolution=1)
+    N1 = design.get_random_value(lower=3, upper=10, resolution=1)
     N2 = N1
     N1_layer = design.get_random_value(lower=1, upper=1, resolution=1)
     N2_layer = design.get_random_value(lower=1, upper=1, resolution=1)
 
     frequency = design.get_random_value(lower=10, upper=40, resolution=1)
-    per = design.get_random_value(lower=500, upper=30000, resolution=1)
+    per = design.get_random_value(lower=1000, upper=10000, resolution=1)
     
     w1 = design.get_random_value(lower=100, upper=350, resolution=0.1)
     l1_ref = design.get_random_value(lower=30, upper=80, resolution=0.1)
@@ -224,7 +224,7 @@ def create_input_parameter(design, param_list=None):
     N1_offset = calculate_coil_offset(N1, N1_layer, h1, N1_height_ratio, N1_offset_ratio)
     N2_offset = calculate_coil_offset(N2, N2_layer, h1/2, N2_height_ratio, N2_offset_ratio)
 
-    mold_thick = design.get_random_value(lower=10, upper=60, resolution=0.1)
+    mold_thick = design.get_random_value(lower=10, upper=40, resolution=0.1)
 
     l2_gap = design.get_random_value(lower=5, upper=50, resolution=0.1)
     l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l + mold_thick
