@@ -342,7 +342,7 @@ class Simulation() :
             print(f"Error deleting project folder {project_folder}: {e}", file=sys.stderr)
 
 
-if __name__ == '__main__':
+def main():
     for i in range(5000):
         try:
             simulation_runner = Simulation()
@@ -425,7 +425,9 @@ if __name__ == '__main__':
             simulation_runner.delete_project_folder()
 
             time.sleep(10)
-            
+
+if __name__ == '__main__':
+    main()
 
         
 
