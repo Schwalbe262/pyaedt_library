@@ -219,7 +219,36 @@ class pyDesign:
         for mesh in mesh_obj:
             if isinstance(mesh, str): # name case
                 oModule.DeleteOp([mesh])
-            elif isinstance(mesh.name, str):
+            elif isinstance(mesh.name, str): # obj case
                 oModule.DeleteOp([mesh.name]) 
             else:
                 raise ValueError("mesh_obj must be a mesh object or a mesh name(str)")
+            
+
+
+    def get_excitation(self, excitation_name=None):
+        """
+        Get excitation objects by name(s).
+        
+        Args:
+            excitation_name (str or list): Name or list of names of excitations to get
+            
+        Returns:
+            list: List of excitation objects in same order as input names
+        """
+        
+        # Convert single name to list
+        if isinstance(excitation_name, str):
+            excitation_name = [excitation_name]
+        elif excitation_name is None:
+            return []
+            
+        # Get excitation objects in order of input names
+        excitation_list = []
+        for name in excitation_name:
+            if name in self.excitation_objects:
+                excitation_list.append(self.excitation_objects[name])
+            else:
+                raise ValueError(f"Excitation '{name}' not found")
+                
+        return excitation_list
