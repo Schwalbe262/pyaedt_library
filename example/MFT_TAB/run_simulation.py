@@ -110,9 +110,9 @@ class Simulation() :
 
     def set_maxwell_analysis(self) :
         self.maxwell_design.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.maxwell_design.setup.properties["Max. Number of Passes"] = 3 # 10
+        self.maxwell_design.setup.properties["Max. Number of Passes"] = 10 # 10
         self.maxwell_design.setup.properties["Min. Number of Passes"] = 1
-        self.maxwell_design.setup.properties["Percent Error"] = 5 # 2.5
+        self.maxwell_design.setup.properties["Percent Error"] = 2.5 # 2.5
         self.maxwell_design.setup.properties["Frequency Setup"] = f"{self.maxwell_design.frequency}kHz"
 
     def create_core(self):
