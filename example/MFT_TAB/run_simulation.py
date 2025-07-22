@@ -167,7 +167,7 @@ class Simulation() :
         end_time = time.time()
         print(f"Maxwell analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
-    def get_simulation_results(self, input=True, step=1):
+    def get_simulation_results(self, design=None,input=True, step=1):
         current_dir = os.getcwd()
         folder_path = os.path.join(current_dir, "simulation", f"{self.PROJECT_NAME}")
         if input:
@@ -178,12 +178,12 @@ class Simulation() :
 
         
         if step == 1:
-            self.maxwell_design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None)
-            self.maxwell_design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None)
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None)
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None)
         else:
-            self.maxwell_design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report)
-            self.maxwell_design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report)
-        analysis_df = get_convergence_report(self.maxwell_design)
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report)
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report)
+        analysis_df = get_convergence_report(design)
 
         results_df = pd.concat([result_df, magnetic_df, calculator_df, analysis_df], axis=1)
         self.results_df = results_df
@@ -229,7 +229,7 @@ class Simulation() :
 
 
         self.analyze_maxwell(self.maxwell_design2)
-        self.get_simulation_results(input=False, step=2)
+        self.get_simulation_results(design=self.maxwell_design2, input=False, step=2)
 
     def create_icepak(self):
 
@@ -375,7 +375,7 @@ def main():
             simulation_runner.analyze_maxwell(simulation_runner.maxwell_design)
 
             # 9. 결과 리포팅
-            simulation_runner.get_simulation_results(input=True)
+            simulation_runner.get_simulation_results(design=simulation_runner.maxwell_design, input=True)
 
             # 10. 두 번째 해석 실행
             simulation_runner.second_simulation()
