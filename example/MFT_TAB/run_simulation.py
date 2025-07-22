@@ -261,7 +261,7 @@ class Simulation() :
         # Assign EM Loss from Maxwell analysis to Icepak thermal simulation
         self.icepak_design.assign_EM_loss(name="Coreloss", objects=[self.maxwell_design.core], design=self.maxwell_design2, frequency=self.maxwell_design.frequency*1e+3, loss_mul=1)
         self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2, self.maxwell_design.winding3], 
-                                          design=self.maxwell_design2, frequency=self.maxwell_design.frequency*1e+3, loss_mul=self.maxwell_design.winding_thermal_ratio)
+                                          design=self.maxwell_design, frequency=self.maxwell_design.frequency*1e+3, loss_mul=self.maxwell_design.winding_thermal_ratio)
         # self.icepak_design.assign_EM_loss(name="Windingloss", objects=[self.maxwell_design.winding1, self.maxwell_design.winding2], design=self.maxwell_design, frequency=self.freq, loss_mul=1)
 
         # boundary setup
@@ -287,6 +287,8 @@ class Simulation() :
         self.icepak_design.leg_top_right = self.icepak_design.model3d.find_object(self.maxwell_design.leg_top_right)
         self.icepak_design.leg_bottom_left = self.icepak_design.model3d.find_object(self.maxwell_design.leg_bottom_left)
         self.icepak_design.leg_bottom_right = self.icepak_design.model3d.find_object(self.maxwell_design.leg_bottom_right)
+
+        
 
         # Assign fixed temperature boundary condition to the cold plates
         self.icepak_design.assign_icepak_source(
