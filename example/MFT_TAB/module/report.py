@@ -32,7 +32,7 @@ def get_input_parameter(design):
     Gathers input parameters from the design object and returns them as a pandas DataFrame.
     """
     param_columns = [
-            "N1", "N2", "N1_layer", "N2_layer", "freq", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
+            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side", "l1_side_ratio", "l1_center", "l2", "l2_gap", "h1",
             "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
             "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",

@@ -354,6 +354,8 @@ def main(test=False):
 
             if test == True :
                 simulation_runner.test = True
+            else :
+                simulation_runner.test = False
 
             # 2. create_design 메서드를 호출하여 프로젝트와 디자인을 초기화합니다.
             simulation_runner.create_design("SST_MFT")
@@ -403,6 +405,9 @@ def main(test=False):
 
             # 15. 결과 저장
             simulation_runner.save_results_to_csv(simulation_runner.results_df)
+
+            if test == True :
+                break
 
             simulation_runner.close_project()
             simulation_runner.delete_project_folder()

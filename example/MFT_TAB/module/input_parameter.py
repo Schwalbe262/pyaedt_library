@@ -36,7 +36,7 @@ def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
 def create_input_parameter_for_test(design, param_list=None):
     if param_list is not None:
         keys = [
-            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
+            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side_ratio", "l1_center", "l1_side", "l2", "l2_gap", "h1",
             "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
             "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
@@ -226,7 +226,7 @@ def create_input_parameter_for_test(design, param_list=None):
 def create_input_parameter(design, param_list=None):
     if param_list is not None:
         keys = [
-            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
+            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side_ratio", "l1_center", "l1_side", "l2", "l2_gap", "h1",
             "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
             "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
