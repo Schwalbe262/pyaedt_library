@@ -33,7 +33,7 @@ def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
     return offset
 
 
-def create_input_parameter(design, param_list=None):
+def create_input_parameter_for_test(design, param_list=None):
     if param_list is not None:
         keys = [
             "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",
@@ -223,7 +223,7 @@ def create_input_parameter(design, param_list=None):
     
 
 
-def create_input_parameter_for_test(design, param_list=None):
+def create_input_parameter(design, param_list=None):
     if param_list is not None:
         keys = [
             "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_center", "l1_side", "l2", "l2_gap", "h1",

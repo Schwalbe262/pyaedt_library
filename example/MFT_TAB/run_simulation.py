@@ -25,7 +25,7 @@ from filelock import FileLock
 import traceback
 import logging
 
-from module.input_parameter import create_input_parameter, calculate_coil_parameter, calculate_coil_offset, set_design_variables
+from module.input_parameter import create_input_parameter, create_input_parameter_for_test, calculate_coil_parameter, calculate_coil_offset, set_design_variables
 from module.modeling import (
     create_core_model, create_all_windings, create_cold_plate, create_air,
     assign_meshing, assign_excitations, create_face, create_mold
@@ -92,7 +92,10 @@ class Simulation() :
 
     
     def create_input_parameter(self, param_list=None) :
-        input_parameter = create_input_parameter(self.maxwell_design, param_list)
+        if self.test == True :
+            input_parameter = create_input_parameter_for_test(self.maxwell_design, param_list)
+        else :
+            input_parameter = create_input_parameter(self.maxwell_design, param_list)
         print(f"input_parameter : {input_parameter}")
         print("input_parameter :", ",".join(str(float(v)) for v in input_parameter.values()))
         return input_parameter
@@ -200,6 +203,8 @@ class Simulation() :
 
 
     def second_simulation(self):
+
+        time.sleep(5)
 
         oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
         oProject.CopyDesign(self.maxwell_design.name)
@@ -342,10 +347,14 @@ class Simulation() :
             print(f"Error deleting project folder {project_folder}: {e}", file=sys.stderr)
 
 
-def main():
+def main(test=False):
     for i in range(5000):
         try:
             simulation_runner = Simulation()
+
+            if test == True :
+                simulation_runner.test = True
+
             # 2. create_design 메서드를 호출하여 프로젝트와 디자인을 초기화합니다.
             simulation_runner.create_design("SST_MFT")
 
