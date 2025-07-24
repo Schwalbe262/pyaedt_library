@@ -5,6 +5,8 @@ from ansys.aedt.core import Desktop as AEDTDesktop
 
 from .pyproject import pyProject
 
+import socket # for grpc
+
 
 class pyDesktop(AEDTDesktop) :
 
@@ -21,6 +23,32 @@ class pyDesktop(AEDTDesktop) :
         *args,
         **kwargs
     ):
+        
+        def get_free_ports(num_ports):
+        
+            def is_port_available(port):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    sock.bind(('localhost', port))
+                    sock.close()
+                    return True
+                except:
+                    return False
+                    
+            available_ports = []
+            port = 50000  # GRPC 기본 포트 범위 시작
+            
+            while len(available_ports) < num_ports:
+                if is_port_available(port):
+                    available_ports.append(port)
+                port += 1
+                if port > 60000:  # 최대 포트 번호 제한
+                    break
+                    
+            return available_ports
+
+        free_ports = get_free_ports(10)[0]
+
 
         super().__init__(
             version=version,
@@ -29,7 +57,7 @@ class pyDesktop(AEDTDesktop) :
             close_on_exit=close_on_exit,
             student_version=student_version,
             machine=machine,
-            port=port,
+            port=free_ports,
             aedt_process_id=aedt_process_id,
             *args,
             **kwargs

@@ -82,7 +82,7 @@ class Icepak(AEDTIcepak) :
             expressions=result_expressions, setup_sweep_name=None, domain='Sweep', 
             variations=None, primary_sweep_variable=None, secondary_sweep_variable=None, 
             report_category=category, plot_type='Data Table', context=None, 
-            subdesign_id=None, polyline_points=1001, plotname=report_name
+            subdesign_id=None, polyline_points=1001, plot_name=report_name
         )
 
     def _add_calculator_expression(self, parameters) :
