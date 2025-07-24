@@ -23,7 +23,7 @@ class Icepak(AEDTIcepak) :
         
         if mod == "write" :
             result_expressions, name_list = self._add_calculator_expression(parameters=parameters)
-            report = self._create_report(report_name = "calculator_report", result_expressions = result_expressions, category = "Fields")
+            report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = "Fields")
             if not hasattr(self, "report_list"):
                 self.report_list = {}
             self.report_list["icepak_calc_report"] = report
