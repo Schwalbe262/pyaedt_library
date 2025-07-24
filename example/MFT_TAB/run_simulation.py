@@ -181,11 +181,11 @@ class Simulation() :
 
         
         if step == 1:
-            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None, report_name="magnetic_report1")
-            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="write", import_report=None, report_name="calculator_report1")
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="magnetic_report1")
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="calculator_report1")
         else:
-            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report, report_name="magnetic_report2")
-            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(self.maxwell_design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report, report_name="calculator_report2")
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report, report_name="magnetic_report2")
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report, report_name="calculator_report2")
         analysis_df = get_convergence_report(design)
 
         results_df = pd.concat([result_df, magnetic_df, calculator_df, analysis_df], axis=1)
