@@ -69,9 +69,9 @@ def get_maxwell_magnetic_parameter(design, dir=None, mod="write", import_report=
         ["Matrix.L(Tx_Winding,Tx_Winding)*(1-abs(Matrix.CplCoef(Tx_Winding,Rx1_Winding))^2)", f"Llk12", "uH"],
         ["Matrix.L(Tx_Winding,Tx_Winding)*(1-abs(Matrix.CplCoef(Tx_Winding,Rx2_Winding))^2)", f"Llk13", "uH"],
         ["Matrix.L(Rx1_Winding,Rx1_Winding)*(1-abs(Matrix.CplCoef(Rx1_Winding,Tx_Winding))^2)", f"Llk21", "uH"],
-        ["Matrix.L(Rx1_Winding,Rx1_Winding)*(1-abs(Matrix.CplCoef(Rx1_Winding,Tx_Winding))^2)", f"Llk23", "uH"],
+        ["Matrix.L(Rx1_Winding,Rx1_Winding)*(1-abs(Matrix.CplCoef(Rx1_Winding,Rx2_Winding))^2)", f"Llk23", "uH"],
         ["Matrix.L(Rx2_Winding,Rx2_Winding)*(1-abs(Matrix.CplCoef(Rx2_Winding,Tx_Winding))^2)", f"Llk31", "uH"],
-        ["Matrix.L(Rx2_Winding,Rx2_Winding)*(1-abs(Matrix.CplCoef(Rx2_Winding,Tx_Winding))^2)", f"Llk32", "uH"],
+        ["Matrix.L(Rx2_Winding,Rx2_Winding)*(1-abs(Matrix.CplCoef(Rx2_Winding,Rx1_Winding))^2)", f"Llk32", "uH"],
     ]
 
     report, df = design.get_magnetic_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name)

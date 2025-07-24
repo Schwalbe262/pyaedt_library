@@ -296,7 +296,7 @@ def create_input_parameter(design, param_list=None):
 
     thermal_conductivity = design.get_random_value(lower=0.2, upper=1.5, resolution=0.01)
     winding_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
-    wind_speed = design.get_random_value(lower=1, upper=20, resolution=0.1)
+    wind_speed = design.get_random_value(lower=1, upper=10, resolution=0.1)
 
 
     input_parameter = {
