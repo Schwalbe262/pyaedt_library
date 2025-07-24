@@ -2,6 +2,8 @@ import sys
 import os
 import platform
 import shutil
+import logging
+from datetime import datetime
 
 os_name = platform.system()
 if os_name == "Windows":
@@ -32,7 +34,6 @@ import pandas as pd
 import csv
 from filelock import FileLock
 import traceback
-import logging
 
 from module.input_parameter import create_input_parameter, create_input_parameter_for_test, calculate_coil_parameter, calculate_coil_offset, set_design_variables
 from module.modeling import (
@@ -46,17 +47,29 @@ from module.report import (
 
 
 def save_error_log(project_name, error_info):
-    error_folder = "error"
+    current_dir = os.getcwd()
+    error_folder = os.path.join(current_dir, "simulation", project_name, "error")
     os.makedirs(error_folder, exist_ok=True)
-    error_file = os.path.join(error_folder, f"{project_name}_error.txt")
-    with open(error_file, "w", encoding="utf-8") as f:
-        f.write(error_info)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    error_file = os.path.join(error_folder, f"error_{timestamp}.log")
+    
+    # Configure logging
+    logging.basicConfig(
+        filename=error_file,
+        level=logging.ERROR,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    # Log the error
+    logging.error(error_info)
 
 
 class Simulation() :
 
     def __init__(self) :
-
+        # Set up logging
+        current_dir = os.getcwd()
         self.NUM_CORE = 4
         self.NUM_TASK = 1
 
@@ -81,9 +94,22 @@ class Simulation() :
             file.truncate()
             file.write(str(content))
 
-            # 파일은 with 블록 종료 시 자동으로 닫히며, 잠금도 해제됨
+        # Set up logging for this simulation
+        folder_path = os.path.join(current_dir, "simulation", self.PROJECT_NAME)
+        os.makedirs(folder_path, exist_ok=True)
+        log_file = os.path.join(folder_path, "simulation.log")
+        
+        # Configure logging to write to both file and console
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_file),
+                logging.StreamHandler(sys.stdout)
+            ]
+        )
 
-        print(f"==========simulation{content}==========")
+        logging.info(f"==========simulation{content}==========")
 
         os_name = platform.system()
         if os_name == "Windows":
@@ -105,8 +131,8 @@ class Simulation() :
             input_parameter = create_input_parameter_for_test(self.maxwell_design, param_list)
         else :
             input_parameter = create_input_parameter(self.maxwell_design, param_list)
-        print(f"input_parameter : {input_parameter}")
-        print("input_parameter :", ",".join(str(float(v)) for v in input_parameter.values()))
+        logging.info(f"input_parameter : {input_parameter}")
+        logging.info("input_parameter : " + ",".join(str(float(v)) for v in input_parameter.values()))
         return input_parameter
 
 
@@ -174,12 +200,12 @@ class Simulation() :
         self.project.save_project(path=file_path)
         
         start_time = time.time()
-        print(f"Maxwell analysis started...")
+        logging.info("Maxwell analysis started...")
         design.analyze()
         end_time = time.time()
-        print(f"Maxwell analysis finished. Duration: {end_time - start_time:.2f} seconds.")
+        logging.info(f"Maxwell analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
-    def get_simulation_results(self, design=None,input=True, step=1):
+    def get_simulation_results(self, design=None, input=True, step=1):
         current_dir = os.getcwd()
         folder_path = os.path.join(current_dir, "simulation", f"{self.PROJECT_NAME}")
         if input:
@@ -208,7 +234,7 @@ class Simulation() :
         with FileLock(lock_path):
             file_exists = os.path.isfile(filename)
             results_df.to_csv(filename, mode='a', header=not file_exists, index=False)
-        print(f"Results saved to {filename}")
+        logging.info(f"Results saved to {filename}")
 
 
     def second_simulation(self):
@@ -330,10 +356,10 @@ class Simulation() :
     def analyze_icepak(self):
         """Runs the Icepak analysis."""
         start_time = time.time()
-        print(f"Icepak analysis started...")
+        logging.info("Icepak analysis started...")
         self.icepak_design.analyze()
         end_time = time.time()
-        print(f"Icepak analysis finished. Duration: {end_time - start_time:.2f} seconds.")
+        logging.info(f"Icepak analysis finished. Duration: {end_time - start_time:.2f} seconds.")
 
     def get_icepak_results(self):
         """Retrieves and processes results from the Icepak simulation."""
@@ -366,9 +392,9 @@ class Simulation() :
             project_folder = os.path.join(os.getcwd(), "simulation", self.PROJECT_NAME)
             if os.path.isdir(project_folder):
                 shutil.rmtree(project_folder)
-                print(f"Successfully deleted project folder: {project_folder}")
+                logging.info(f"Successfully deleted project folder: {project_folder}")
         except Exception as e:
-            print(f"Error deleting project folder {project_folder}: {e}", file=sys.stderr)
+            logging.error(f"Error deleting project folder {project_folder}: {e}")
 
 
 def main(test=False):
@@ -457,16 +483,13 @@ def main(test=False):
             
             save_error_log(simulation_runner.PROJECT_NAME, err_info)
             
-            print(f"{simulation_runner.PROJECT_NAME} : {i} simulation Failed")
+            logging.error(f"{simulation_runner.PROJECT_NAME} : {i} simulation Failed")
             
             simulation_runner.desktop.release_desktop(close_projects=True, close_on_exit=True)
-            simulation_runner.delete_project_folder()
+            # simulation_runner.delete_project_folder()
 
             time.sleep(10)
 
 if __name__ == '__main__':
     main()
 
-        
-
-        

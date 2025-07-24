@@ -13,7 +13,7 @@ class pyDesktop(AEDTDesktop) :
     def __init__(
         self,
         version=None,
-        non_graphical=False,
+        non_graphical=True if os.name != "nt" else False,
         new_desktop=True,
         close_on_exit=True,
         student_version=False,
