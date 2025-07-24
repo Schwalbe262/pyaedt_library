@@ -46,7 +46,7 @@ def get_input_parameter(design):
     return pd.DataFrame(data=input_data)
 
 
-def get_maxwell_magnetic_parameter(design, dir=None, mod="write", import_report=None, report_name="magnetic_report"):
+def get_maxwell_magnetic_parameter(design, dir=None, mod="write", import_report=None, report_name="magnetic_report", file_name="magnetic_report"):
     """
     Creates a report for magnetic parameters (Inductances, Coupling)
     and returns the data as a pandas DataFrame.
@@ -74,13 +74,13 @@ def get_maxwell_magnetic_parameter(design, dir=None, mod="write", import_report=
         ["Matrix.L(Rx2_Winding,Rx2_Winding)*(1-abs(Matrix.CplCoef(Rx2_Winding,Rx1_Winding))^2)", f"Llk32", "uH"],
     ]
 
-    report, df = design.get_magnetic_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name)
+    report, df = design.get_magnetic_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name, file_name=file_name)
 
     return report, df
 
 
 
-def get_maxwell_calculator_parameter(design, dir=None, mod="write", import_report=None, report_name="calculator_report"):
+def get_maxwell_calculator_parameter(design, dir=None, mod="write", import_report=None, report_name="calculator_report", file_name="calculator_report"):
     """
     Creates a report for various calculator quantities (losses, fields).
     """
@@ -98,12 +98,12 @@ def get_maxwell_calculator_parameter(design, dir=None, mod="write", import_repor
         [design.leg_bottom_right, f"B_mean_leg_bottom_right", "B_mean"],
     ]
 
-    report, df = design.get_calculator_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name)
+    report, df = design.get_calculator_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name, file_name=file_name)
 
     return report, df
 
 
-def get_icepak_calculator_parameter(design, dir=None, mod="write", import_report=None):
+def get_icepak_calculator_parameter(design, dir=None, mod="write", import_report=None, report_name="thermal_report", file_name="thermal_report"):
     """
     Creates a report for various calculator quantities (losses, fields).
     """
@@ -134,7 +134,7 @@ def get_icepak_calculator_parameter(design, dir=None, mod="write", import_report
 
     # Icepak does not have a frequency sweep, so we expect a single row of results.
     # The get_calculator_parameter function should be adapted to handle this.
-    report, df = design.get_calculator_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report)
+    report, df = design.get_calculator_parameter(dir=dir, parameters=params, mod=mod, import_report=import_report, report_name=report_name, file_name=file_name)
 
     return report, df
     

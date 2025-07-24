@@ -24,7 +24,7 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         return power_ferrite
 
-    def get_magnetic_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="magnetic_report") :
+    def get_magnetic_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="magnetic_report", file_name="magnetic_report") :
         """
         example :
         parameters1 = []
@@ -44,9 +44,12 @@ class Maxwell3d(AEDTMaxwell3d) :
         elif 'report' not in locals():
             # Handle case where report is not created and not found
             return pd.DataFrame()
+        
 
-        export_path = os.path.join(dir, f"{report.plot_name}.csv")
-        self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
+        export_path = os.path.join(dir, f"{file_name}.csv")
+        oDesign = self.odesign
+        oModule = oDesign.GetModule("ReportSetup")
+        oModule.ExportToFile(report_name, export_path, False)
         data = pd.read_csv(export_path)
         
         # Create a mapping from the expression in the report to the desired new name
@@ -105,7 +108,7 @@ class Maxwell3d(AEDTMaxwell3d) :
         return report, output_df
 
 
-    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="calculator_report") :
+    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="calculator_report", file_name="calculator_report") :
         """
         example :
         parameters2 = []
@@ -140,8 +143,10 @@ class Maxwell3d(AEDTMaxwell3d) :
              # Return an empty DataFrame with the expected column names.
              return None, pd.DataFrame(columns=name_list)
 
-        export_path = os.path.join(dir, f"{report.plot_name}.csv")
-        self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
+        export_path = os.path.join(dir, f"{file_name}.csv")
+        oDesign = self.odesign
+        oModule = oDesign.GetModule("ReportSetup")
+        oModule.ExportToFile(report_name, export_path, False)
         data = pd.read_csv(export_path)
 
         # Create a mapping from the actual column names in the CSV to the desired names

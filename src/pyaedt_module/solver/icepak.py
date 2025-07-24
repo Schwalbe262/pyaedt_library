@@ -9,7 +9,7 @@ class Icepak(AEDTIcepak) :
         super().__init__(*args, **kwargs)
     
 
-    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None) :
+    def get_calculator_parameter(self, dir=None, parameters=[], mod="write", import_report=None, report_name="thermal_report", file_name="thermal_report") :
         """
         example :
         parameters2 = []
@@ -47,11 +47,11 @@ class Icepak(AEDTIcepak) :
         if not report:
              return None, pd.DataFrame(columns=[p[1] for p in parameters])
 
-        self.post.export_report_to_csv(project_dir=dir, plot_name=report.plot_name)
-        
-        # Construct the file path manually as export_report_to_csv returns a boolean
-        csv_path = os.path.join(dir, f"{report.plot_name}.csv")
-        data = pd.read_csv(csv_path)
+        export_path = os.path.join(dir, f"{file_name}.csv")
+        oDesign = self.odesign
+        oModule = oDesign.GetModule("ReportSetup")
+        oModule.ExportToFile(report_name, export_path, False)
+        data = pd.read_csv(export_path)
 
         # Create a mapping from the actual column names in the CSV to the desired names
         rename_mapping = {}

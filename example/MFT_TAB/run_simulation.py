@@ -181,11 +181,11 @@ class Simulation() :
 
         
         if step == 1:
-            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="magnetic_report1")
-            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="calculator_report1")
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="magnetic_report", file_name="magnetic_report1")
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="write", import_report=None, report_name="calculator_report", file_name="calculator_report1")
         else:
-            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report, report_name="magnetic_report2")
-            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report, report_name="calculator_report2")
+            design.magnetic_report, magnetic_df = get_maxwell_magnetic_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.magnetic_report, report_name="magnetic_report", file_name="magnetic_report2")
+            design.calculator_report, calculator_df = get_maxwell_calculator_parameter(design, dir=folder_path, mod="read", import_report=self.maxwell_design.calculator_report, report_name="calculator_report", file_name="calculator_report2")
         analysis_df = get_convergence_report(design)
 
         results_df = pd.concat([result_df, magnetic_df, calculator_df, analysis_df], axis=1)
@@ -214,6 +214,21 @@ class Simulation() :
 
         oProject = self.desktop.odesktop.SetActiveProject(self.project.name)
         oDesign = oProject.SetActiveDesign(self.maxwell_design2.design_name)
+
+        # Map cold plate objects from Maxwell to Maxwell2
+        self.maxwell_design2.cold_plate_top = self.maxwell_design2.model3d.find_object(self.maxwell_design.cold_plate_top)
+        self.maxwell_design2.cold_plate_bottom = self.maxwell_design2.model3d.find_object(self.maxwell_design.cold_plate_bottom)
+        self.maxwell_design2.winding1 = self.maxwell_design2.model3d.find_object(self.maxwell_design.winding1)
+        self.maxwell_design2.winding2 = self.maxwell_design2.model3d.find_object(self.maxwell_design.winding2)
+        self.maxwell_design2.winding3 = self.maxwell_design2.model3d.find_object(self.maxwell_design.winding3)
+        self.maxwell_design2.core = self.maxwell_design2.model3d.find_object(self.maxwell_design.core)  
+        self.maxwell_design2.leg_left = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_left)
+        self.maxwell_design2.leg_right = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_right)
+        self.maxwell_design2.leg_center = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_center)
+        self.maxwell_design2.leg_top_left = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_top_left)
+        self.maxwell_design2.leg_top_right = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_top_right)
+        self.maxwell_design2.leg_bottom_left = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_bottom_left)
+        self.maxwell_design2.leg_bottom_right = self.maxwell_design2.model3d.find_object(self.maxwell_design.leg_bottom_right)
 
         self.maxwell_design2.delete_mesh(self.maxwell_design.skin_depth_mesh)
         
@@ -321,7 +336,7 @@ class Simulation() :
         
         # Get results using the calculator
         self.icepak_design.calculator_report, icepak_results_df = get_icepak_calculator_parameter(
-            self.icepak_design, dir=folder_path
+            self.icepak_design, dir=folder_path, mod="write", report_name="thermal_report", file_name="thermal_report1"
         )
         
         # Concatenate Icepak results with the main results DataFrame
