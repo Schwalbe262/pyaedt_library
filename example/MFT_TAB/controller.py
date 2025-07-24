@@ -1,5 +1,6 @@
 import subprocess
 import time
+import os
 
 interval_seconds = 6 * 3600  # 3시간 = 10800초
 
@@ -11,7 +12,7 @@ while True:
     # 모든 작업 종료
 
     print("모든 작업 종료(scancel) 실행 중...")
-    subprocess.run(["scancel", "-u", "r1jae262", "--signal=kill"])
+    subprocess.run(["scancel", "-u", os.getlogin(), "--signal=kill"])
     print("rm rf")
     subprocess.run(["rm", "-rf", "simulation"])
 
@@ -34,14 +35,14 @@ while True:
         print(f"{i+1}번째 simulation.sh 제출 (sbatch) 실행 중...")
         subprocess.run(["sbatch", "simulation1.sh"])
         time.sleep(5)
-        subprocess.run(["squeue", "-u", "r1jae262"])
+        subprocess.run(["squeue", "-u", os.getlogin()])
         time.sleep(60)
 
     for i in range(itr):
         print(f"{i+1}번째 simulation2.sh 제출 (sbatch) 실행 중...")
         subprocess.run(["sbatch", "simulation2.sh"])
         time.sleep(5)
-        subprocess.run(["squeue", "-u", "r1jae262"])
+        subprocess.run(["squeue", "-u", os.getlogin()])
         time.sleep(60)
     
     # 3시간 대기
