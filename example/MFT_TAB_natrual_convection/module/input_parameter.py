@@ -242,7 +242,7 @@ def create_input_parameter(design, param_list=None):
         input_parameter = dict(zip(keys, param_list))
         return input_parameter
 
-    N1 = design.get_random_value(lower=3, upper=10, resolution=1)
+    N1 = design.get_random_value(lower=3, upper=6, resolution=1)
     N2 = N1
 
     N1_layer = design.get_random_value(lower=1, upper=1, resolution=1)
