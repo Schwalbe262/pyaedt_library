@@ -233,7 +233,7 @@ def create_input_parameter(design, param_list=None):
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
             "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
             "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "wind_speed"
+            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
         ]
         
         if len(param_list) != len(keys):
@@ -244,10 +244,11 @@ def create_input_parameter(design, param_list=None):
 
     N1 = design.get_random_value(lower=3, upper=10, resolution=1)
     N2 = N1
+
     N1_layer = design.get_random_value(lower=1, upper=1, resolution=1)
     N2_layer = design.get_random_value(lower=1, upper=1, resolution=1)
 
-    frequency = design.get_random_value(lower=10, upper=40, resolution=1)
+    frequency = design.get_random_value(lower=20, upper=20, resolution=1)
     per = design.get_random_value(lower=1000, upper=10000, resolution=1)
     
     w1 = design.get_random_value(lower=100, upper=350, resolution=0.1)
@@ -284,7 +285,7 @@ def create_input_parameter(design, param_list=None):
     mold_thick = design.get_random_value(lower=10, upper=40, resolution=0.1)
 
     l2_gap = design.get_random_value(lower=5, upper=50, resolution=0.1)
-    l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l + mold_thick
+    l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l
     l2 = l2_lower + l2_gap
 
     h1_gap = (h1 - h1*N1_height_ratio)/2 - abs(N1_offset)
@@ -297,7 +298,8 @@ def create_input_parameter(design, param_list=None):
 
     thermal_conductivity = design.get_random_value(lower=0.2, upper=1.5, resolution=0.01)
     winding_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
-    wind_speed = design.get_random_value(lower=1, upper=10, resolution=0.1)
+    core_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
+    wind_speed = design.get_random_value(lower=0.2, upper=1, resolution=0.01)
 
 
     input_parameter = {
@@ -350,6 +352,7 @@ def create_input_parameter(design, param_list=None):
         "mold_thick": mold_thick,
         "thermal_conductivity": thermal_conductivity,
         "winding_thermal_ratio": winding_thermal_ratio,
+        "core_thermal_ratio": core_thermal_ratio,
         "wind_speed": wind_speed
     }
 
