@@ -252,7 +252,7 @@ def create_input_parameter(design, param_list=None):
     per = design.get_random_value(lower=1000, upper=10000, resolution=1)
     
     w1 = design.get_random_value(lower=100, upper=350, resolution=0.1)
-    l1_ref = design.get_random_value(lower=30, upper=80, resolution=0.1)
+    l1_ref = design.get_random_value(lower=20, upper=50, resolution=0.1)
     l1_center = 2 * l1_ref
     l1_top_ratio = design.get_random_value(lower=0.6, upper=1.2, resolution=0.01)
     l1_side_ratio = design.get_random_value(lower=0.6, upper=1.2, resolution=0.01)
