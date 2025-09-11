@@ -42,7 +42,7 @@ def create_input_parameter_for_test(design, param_list=None):
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
             "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
             "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "wind_speed"
+            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
         ]
         
         if len(param_list) != len(keys):
@@ -163,7 +163,8 @@ def create_input_parameter_for_test(design, param_list=None):
 
     thermal_conductivity = 0.4
     winding_thermal_ratio = 0.5
-    wind_speed = 5
+    core_thermal_ratio = 0.5
+    wind_speed = 0.5
 
 
     input_parameter = {
@@ -216,6 +217,7 @@ def create_input_parameter_for_test(design, param_list=None):
         "mold_thick": mold_thick,
         "thermal_conductivity": thermal_conductivity,
         "winding_thermal_ratio": winding_thermal_ratio,
+        "core_thermal_ratio": core_thermal_ratio,
         "wind_speed": wind_speed
     }
 
