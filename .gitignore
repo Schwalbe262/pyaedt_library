@@ -1,6 +1,7 @@
 # Python artifacts
 __pycache__/
 *.pyc
+**/*.pyc
 *.pyo
 *.pyd
 .Python
@@ -42,4 +43,5 @@ simulation_results.csv.lock
 
 *.pyc
 # Python 캐시 파일들 (하위 디렉토리 포함)
-**/__pycache__/**
+__pycache__/
+**/__pycache__/

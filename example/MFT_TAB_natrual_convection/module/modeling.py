@@ -313,7 +313,7 @@ def assign_meshing(design):
     length_mesh = design.mesh.assign_length_mesh(
         assignment=[design.core.name],
         inside_selection=False,
-        maximum_length="100mm",
+        maximum_length="20mm",
         name="core_mesh"
     )
 

@@ -7,7 +7,8 @@ from datetime import datetime
 
 os_name = platform.system()
 if os_name == "Windows":
-    sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/") 
+    sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/")
+    sys.path.insert(0, r"C:/Users/NEC_5950X1/Desktop/git/pyaedt_library/src/")
 else :
     # 두 가지 가능한 경로 패턴
     possible_paths = [
@@ -148,8 +149,9 @@ class Simulation() :
 
     def set_maxwell_analysis(self) :
         self.maxwell_design.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.maxwell_design.setup.properties["Max. Number of Passes"] = 10 # 10
+        self.maxwell_design.setup.properties["Max. Number of Passes"] = 12 # 10
         self.maxwell_design.setup.properties["Min. Number of Passes"] = 1
+        self.maxwell_design.setup.properties["Min. Converged Passes"] = 3
         self.maxwell_design.setup.properties["Percent Error"] = 2.5 # 2.5
         self.maxwell_design.setup.properties["Frequency Setup"] = f"{self.maxwell_design.frequency}kHz"
 
@@ -277,7 +279,8 @@ class Simulation() :
         self.maxwell_design2.Rx_winding2["Current"] = '0 * sqrt(2)A'
 
         self.maxwell_design2.setup = self.maxwell_design2.get_setup(name="Setup1")
-        self.maxwell_design2.setup.properties["Max. Number of Passes"] = 10 # 10
+        self.maxwell_design2.setup.properties["Max. Number of Passes"] = 12 # 10
+        self.maxwell_design2.setup.properties["Min. Converged Passes"] = 3
         self.maxwell_design2.setup.properties["Percent Error"] = 1 # 2.5
 
 
