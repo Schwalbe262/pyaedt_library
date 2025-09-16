@@ -122,7 +122,7 @@ def create_all_windings(design):
         "coil_layer_y_gap": "N1_layer_gap",
         "color": [255, 50, 50],
         "transparency": 0,
-        "offset": ["0mm", "0mm", f"{offset1}mm + ({design.N1_offset}mm)"],
+        "offset": ["0mm", "0mm", f"{offset1}mm + (N1_offset)"],
         # "terminal_position": "w1/2 + 150mm",
         "Num": 6
     }
@@ -161,7 +161,7 @@ def create_all_windings(design):
         "coil_layer_y_gap": "N2_layer_gap",
         "color": [50, 50, 255],
         "transparency": 0,
-        "offset": ["0mm", "0mm", f"h1/4 + {offset2}mm + ({design.N2_offset}mm)"],
+        "offset": ["0mm", "0mm", f"h1/4 + {offset2}mm + (N2_offset)"],
         "terminal_position": "w1/2 + 200mm",
         "Num": 6
     }
@@ -189,7 +189,7 @@ def create_all_windings(design):
         "coil_layer_y_gap": "N2_layer_gap",
         "color": [50, 50, 255],
         "transparency": 0,
-        "offset": ["0mm", "0mm", f"-h1/4 + {offset2}mm + ({design.N2_offset}mm)"],
+        "offset": ["0mm", "0mm", f"-h1/4 + {offset2}mm + (N3_offset)"],
         "terminal_position": "w1/2 + 200mm",
         "Num": 6
     }
@@ -198,6 +198,9 @@ def create_all_windings(design):
     winding3.material_name = "copper"
     print("Winding 'winding3' created successfully.")   
 
+
+    winding2.mirror([0, 0, 0], [0, 1, 0])
+    winding3.mirror([0, 0, 0], [0, 1, 0])
 
     return winding1, winding2, winding3
 

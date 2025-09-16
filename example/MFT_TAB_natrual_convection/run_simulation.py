@@ -36,7 +36,7 @@ import csv
 from filelock import FileLock
 import traceback
 
-from module.input_parameter import create_input_parameter, create_input_parameter_for_test, calculate_coil_parameter, calculate_coil_offset, set_design_variables
+from module.input_parameter import create_input_parameter, calculate_coil_parameter, calculate_coil_offset, set_design_variables
 from module.modeling import (
     create_core_model, create_all_windings, create_cold_plate, create_air,
     assign_meshing, assign_excitations, create_face, create_mold
@@ -128,10 +128,7 @@ class Simulation() :
 
     
     def create_input_parameter(self, param_list=None) :
-        if self.test == True :
-            input_parameter = create_input_parameter_for_test(self.maxwell_design, param_list)
-        else :
-            input_parameter = create_input_parameter(self.maxwell_design, param_list)
+        input_parameter = create_input_parameter(self.maxwell_design, param_list)
         logging.info(f"input_parameter : {input_parameter}")
         logging.info("input_parameter : " + ",".join(str(float(v)) for v in input_parameter.values()))
         return input_parameter
@@ -483,6 +480,9 @@ def main(test=False):
             save_error_log(simulation_runner.PROJECT_NAME, err_info)
             
             logging.error(f"{simulation_runner.PROJECT_NAME} : {i} simulation Failed")
+
+            if test == True :
+                break
             
             simulation_runner.desktop.release_desktop(close_projects=True, close_on_exit=True)
             # simulation_runner.delete_project_folder()

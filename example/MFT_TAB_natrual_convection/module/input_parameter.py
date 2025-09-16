@@ -25,7 +25,7 @@ def calculate_coil_parameter(N, N_layer, h1, height_ratio, fill_factor):
 
 
 
-def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
+def calculate_coil_offset(h1, height_ratio, offset_ratio) :
 
     height = h1 * height_ratio
     offset = (h1 - height)/2 * offset_ratio
@@ -33,209 +33,17 @@ def calculate_coil_offset(N, N_layer, h1, height_ratio, offset_ratio) :
     return offset
 
 
-def create_input_parameter_for_test(design, param_list=None):
-    if param_list is not None:
-        keys = [
-            "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side", "l1_side_ratio", "l1_center", "l2", "l2_gap", "h1",
-            "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
-            "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
-            "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
-            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
-            "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
-        ]
-        
-        if len(param_list) != len(keys):
-            raise ValueError(f"Input list must have exactly {len(keys)} elements, but got {len(param_list)}.")
-            
-        input_parameter = dict(zip(keys, param_list))
-        return input_parameter
-    
-    N1 = 6
-    N2 = 6
-    N1_layer = 1
-    N2_layer = 1
-
-    frequency = 20
-    per = 3000
-    
-    w1 = 200
-    l1_ref = 30
-    l1_center = 2 * l1_ref
-    l1_top_ratio = 1
-    l1_side_ratio = 1
-    l1_top = l1_ref * l1_top_ratio
-    l1_side = l1_ref * l1_side_ratio
-    h1 = 350
-
-    N1_height_ratio = 0.95
-    N2_height_ratio = 0.95
-    N1_fill_factor = 0.95
-    N2_fill_factor = 0.95
-
-    N1_coil_diameter, N1_coil_zgap = calculate_coil_parameter(N1, N1_layer, h1, N1_height_ratio, N1_fill_factor)
-    N2_coil_diameter, N2_coil_zgap = calculate_coil_parameter(N2, N2_layer, h1/2, N2_height_ratio, N2_fill_factor)
-
-    N1_space_w = 5
-    N1_space_l = 5
-    N2_space_w = 5
-    N2_space_l = 5
-
-    N1_layer_gap = 3
-    N2_layer_gap = 3
-
-    N1_offset_ratio = 0
-    N2_offset_ratio = 0
-
-    N1_offset = calculate_coil_offset(N1, N1_layer, h1, N1_height_ratio, N1_offset_ratio)
-    N2_offset = calculate_coil_offset(N2, N2_layer, h1/2, N2_height_ratio, N2_offset_ratio)
-
-    mold_thick = 5
-
-    l2_gap = 10
-    l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l + mold_thick
-    l2 = l2_lower + l2_gap
-
-    h1_gap = (h1 - h1*N1_height_ratio)/2 - abs(N1_offset)
-    h2_gap = (h1 - h1*N2_height_ratio)/2 - abs(N2_offset)
-
-    cold_plate_x = 0
-    cold_plate_y = 0
-    cold_plate_z1 = 20
-    cold_plate_z2 = 0
-
-    thermal_conductivity = 0.4
-    winding_thermal_ratio = 0.5
-    wind_speed = 5
-
-    N1 = 5
-    N2 = 5
-    N1_layer = 1
-    N2_layer = 1
-
-    frequency = 20
-    per = 3000
-    
-    w1 = 140.3
-    l1_ref = 42.4
-    l1_center = 84.8
-    l1_top_ratio = 1.15
-    l1_side_ratio = 0.61
-    l1_top = 48.76
-    l1_side = 25.864
-    h1 = 206.4
-
-    N1_height_ratio = 0.93
-    N2_height_ratio = 0.87
-    N1_fill_factor = 0.82
-    N2_fill_factor = 0.81
-
-    N1_coil_diameter, N1_coil_zgap = calculate_coil_parameter(N1, N1_layer, h1, N1_height_ratio, N1_fill_factor)
-    N2_coil_diameter, N2_coil_zgap = calculate_coil_parameter(N2, N2_layer, h1/2, N2_height_ratio, N2_fill_factor)
-
-    N1_space_w = 5
-    N1_space_l = 5
-    N2_space_w = 11.1
-    N2_space_l = 17.5
-
-    N1_layer_gap = 1
-    N2_layer_gap = 1
-
-    N1_offset_ratio = 0
-    N2_offset_ratio = 0.42
-
-    N1_offset = calculate_coil_offset(N1, N1_layer, h1, N1_height_ratio, N1_offset_ratio)
-    N2_offset = calculate_coil_offset(N2, N2_layer, h1/2, N2_height_ratio, N2_offset_ratio)
-
-    mold_thick = 23.9
-
-    l2_gap = 6.2
-    l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l + mold_thick
-    l2 = 90.95428
-
-    h1_gap = 7.224
-    h2_gap = 10.59864
-
-    cold_plate_x = 0
-    cold_plate_y = 0
-    cold_plate_z1 = 20
-    cold_plate_z2 = 0.02
-
-    thermal_conductivity = 0.4
-    winding_thermal_ratio = 0.5
-    core_thermal_ratio = 0.5
-    wind_speed = 0.5
-
-
-    input_parameter = {
-        "N1": N1,
-        "N2": N2,
-        "N1_layer": N1_layer,
-        "N2_layer": N2_layer,
-
-        "frequency": frequency,
-        "per": per,
-
-        "w1": w1,
-        "l1_top": l1_top,
-        "l1_top_ratio": l1_top_ratio,
-        "l1_side_ratio": l1_side_ratio,
-        "l1_center": l1_center,
-        "l1_side": l1_side,
-        "l2": l2,
-        "l2_gap": l2_gap,
-        "h1": h1,
-        "h1_gap": h1_gap,
-        "h2_gap": h2_gap,
-
-        "N1_height_ratio": N1_height_ratio,
-        "N1_fill_factor": N1_fill_factor,
-        "N1_coil_diameter": N1_coil_diameter,
-        "N1_coil_zgap": N1_coil_zgap,
-        "N2_height_ratio": N2_height_ratio,
-        "N2_fill_factor": N2_fill_factor,
-        "N2_coil_diameter": N2_coil_diameter,
-        "N2_coil_zgap": N2_coil_zgap,
-
-        "N1_space_w": N1_space_w,
-        "N1_space_l": N1_space_l,
-        "N2_space_w": N2_space_w,
-        "N2_space_l": N2_space_l,
-        "N1_layer_gap": N1_layer_gap,
-        "N2_layer_gap": N2_layer_gap,
-
-        "N1_offset_ratio": N1_offset_ratio,
-        "N2_offset_ratio": N2_offset_ratio,
-        "N1_offset": N1_offset,
-        "N2_offset": N2_offset,
-
-        "cold_plate_x": cold_plate_x,
-        "cold_plate_y": cold_plate_y,
-        "cold_plate_z1": cold_plate_z1,
-        "cold_plate_z2": cold_plate_z2,
-
-        "mold_thick": mold_thick,
-        "thermal_conductivity": thermal_conductivity,
-        "winding_thermal_ratio": winding_thermal_ratio,
-        "core_thermal_ratio": core_thermal_ratio,
-        "wind_speed": wind_speed
-    }
-
-
-    return input_parameter 
-    
 
 
 def create_input_parameter(design, param_list=None):
     if param_list is not None:
         keys = [
             "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side", "l1_side_ratio", "l1_center", "l2", "l2_gap", "h1",
-            "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
+            "h1_gap", "h2_gap", "h3_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
             "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
-            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
-            "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
+            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio", "N3_offset_ratio",
+            "N1_offset", "N2_offset", "N3_offset", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
         ]
         
         if len(param_list) != len(keys):
@@ -254,9 +62,9 @@ def create_input_parameter(design, param_list=None):
     per = design.get_random_value(lower=1000, upper=10000, resolution=1)
     
     w1 = design.get_random_value(lower=100, upper=350, resolution=0.1)
-    l1_ref = design.get_random_value(lower=20, upper=50, resolution=0.1)
+    l1_ref = design.get_random_value(lower=20, upper=60, resolution=0.1)
     l1_center = 2 * l1_ref
-    l1_top_ratio = design.get_random_value(lower=0.6, upper=1.2, resolution=0.01)
+    l1_top_ratio = design.get_random_value(lower=0.6, upper=1.5, resolution=0.01)
     l1_side_ratio = design.get_random_value(lower=0.6, upper=1.2, resolution=0.01)
     l1_top = l1_ref * l1_top_ratio
     l1_side = l1_ref * l1_side_ratio
@@ -280,25 +88,20 @@ def create_input_parameter(design, param_list=None):
 
     N1_offset_ratio = design.get_random_value(lower=-0.8, upper=0.8, resolution=0.01)
     N2_offset_ratio = design.get_random_value(lower=-0.8, upper=0.8, resolution=0.01)
+    N3_offset_ratio = design.get_random_value(lower=-0.8, upper=0.8, resolution=0.01)
 
-    N1_offset = calculate_coil_offset(N1, N1_layer, h1, N1_height_ratio, N1_offset_ratio)
-    N2_offset = calculate_coil_offset(N2, N2_layer, h1/2, N2_height_ratio, N2_offset_ratio)
-
-    mold_thick = design.get_random_value(lower=10, upper=40, resolution=0.1)
+    N1_offset = calculate_coil_offset(h1, N1_height_ratio, N1_offset_ratio)
+    N2_offset = calculate_coil_offset(h1/2, N2_height_ratio, N2_offset_ratio)
+    N3_offset = calculate_coil_offset(h1/2, N2_height_ratio, N3_offset_ratio)
 
     l2_gap = design.get_random_value(lower=5, upper=50, resolution=0.1)
     l2_lower = N1_layer*N1_coil_diameter + N2_layer*N2_coil_diameter + (N1_layer-1)*N1_layer_gap + (N2_layer-1)*N2_layer_gap + N1_space_l + N2_space_l
     l2 = l2_lower + l2_gap
 
     h1_gap = (h1 - h1*N1_height_ratio)/2 - abs(N1_offset)
-    h2_gap = (h1 - h1*N2_height_ratio)/2 - abs(N2_offset)
+    h2_gap = (h1/2 - h1/2*N2_height_ratio)/2 - (N2_offset)
+    h3_gap = (h1/2 - h1/2*N2_height_ratio)/2 + (N3_offset)
 
-    cold_plate_x = design.get_random_value(lower=0, upper=0, resolution=0.1)
-    cold_plate_y = design.get_random_value(lower=0, upper=0, resolution=0.1)
-    cold_plate_z1 = design.get_random_value(lower=10, upper=50, resolution=0.1)
-    cold_plate_z2 = design.get_random_value(lower=0.0, upper=0.3, resolution=0.01)
-
-    thermal_conductivity = design.get_random_value(lower=0.2, upper=1.5, resolution=0.01)
     winding_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
     core_thermal_ratio = design.get_random_value(lower=0.3, upper=1.0, resolution=0.01)
     wind_speed = design.get_random_value(lower=0.2, upper=1, resolution=0.01)
@@ -324,6 +127,7 @@ def create_input_parameter(design, param_list=None):
         "h1": h1,
         "h1_gap": h1_gap,
         "h2_gap": h2_gap,
+        "h3_gap": h3_gap,
 
         "N1_height_ratio": N1_height_ratio,
         "N1_fill_factor": N1_fill_factor,
@@ -343,16 +147,11 @@ def create_input_parameter(design, param_list=None):
 
         "N1_offset_ratio": N1_offset_ratio,
         "N2_offset_ratio": N2_offset_ratio,
+        "N3_offset_ratio": N3_offset_ratio,
         "N1_offset": N1_offset,
         "N2_offset": N2_offset,
+        "N3_offset": N3_offset,
 
-        "cold_plate_x": cold_plate_x,
-        "cold_plate_y": cold_plate_y,
-        "cold_plate_z1": cold_plate_z1,
-        "cold_plate_z2": cold_plate_z2,
-
-        "mold_thick": mold_thick,
-        "thermal_conductivity": thermal_conductivity,
         "winding_thermal_ratio": winding_thermal_ratio,
         "core_thermal_ratio": core_thermal_ratio,
         "wind_speed": wind_speed
@@ -379,11 +178,7 @@ def set_design_variables(design, input_parameter):
         "N1_space_w": "mm", "N1_space_l": "mm",
         "N2_space_w": "mm", "N2_space_l": "mm",
         "N1_layer_gap": "mm", "N2_layer_gap": "mm",
-        "N1_offset": "mm", "N2_offset": "mm",
-        "N1_height_ratio": "mm",
-        "N2_height_ratio": "mm",
-        "N1_fill_factor": "mm",
-        "mold_thick": "mm"
+        "N1_offset": "mm", "N2_offset": "mm", "N3_offset": "mm"
     }
 
     for key, value in input_parameter.items():

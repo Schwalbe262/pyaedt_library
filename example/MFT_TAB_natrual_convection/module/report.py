@@ -33,13 +33,12 @@ def get_input_parameter(design):
     """
     param_columns = [
             "N1", "N2", "N1_layer", "N2_layer", "frequency", "per", "w1", "l1_top", "l1_top_ratio", "l1_side", "l1_side_ratio", "l1_center", "l2", "l2_gap", "h1",
-            "h1_gap", "h2_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
+            "h1_gap", "h2_gap", "h3_gap", "N1_height_ratio", "N1_fill_factor", "N1_coil_diameter",
             "N1_coil_zgap", "N2_height_ratio", "N2_fill_factor", "N2_coil_diameter",
             "N2_coil_zgap", "N1_space_w", "N1_space_l", "N2_space_w", "N2_space_l",
-            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio",
-            "N1_offset", "N2_offset", "cold_plate_x", "cold_plate_y", "cold_plate_z1",
-            "cold_plate_z2", "mold_thick", "thermal_conductivity", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
-        ]       
+            "N1_layer_gap", "N2_layer_gap", "N1_offset_ratio", "N2_offset_ratio", "N3_offset_ratio",
+            "N1_offset", "N2_offset", "N3_offset", "winding_thermal_ratio", "core_thermal_ratio", "wind_speed"
+        ]
     
     input_data = {col: [getattr(design, col, None)] for col in param_columns}
     
@@ -56,11 +55,14 @@ def get_maxwell_magnetic_parameter(design, dir=None, mod="write", import_report=
 
     params = [
         ["Matrix.L(Tx_Winding,Tx_Winding)", f"L11", "uH"],
+        ["Matrix.L(Tx_Winding,Rx1_Winding)", f"L12", "uH"],
+        ["Matrix.L(Tx_Winding,Rx2_Winding)", f"L13", "uH"],
+        ["Matrix.L(Rx1_Winding,Tx_Winding)", f"L21", "uH"],
         ["Matrix.L(Rx1_Winding,Rx1_Winding)", f"L22", "uH"],
+        ["Matrix.L(Rx1_Winding,Rx2_Winding)", f"L23", "uH"],
+        ["Matrix.L(Rx2_Winding,Tx_Winding)", f"L31", "uH"],
+        ["Matrix.L(Rx2_Winding,Rx1_Winding)", f"L32", "uH"],
         ["Matrix.L(Rx2_Winding,Rx2_Winding)", f"L33", "uH"],
-        ["Matrix.L(Tx_Winding,Rx1_Winding)", f"M12", "uH"],
-        ["Matrix.L(Tx_Winding,Rx2_Winding)", f"M13", "uH"],
-        ["Matrix.L(Rx_Winding1,Rx_Winding2)", f"M23", "uH"],
         ["abs(Matrix.CplCoef(Tx_Winding,Rx1_Winding))", f"k12", ""],
         ["abs(Matrix.CplCoef(Tx_Winding,Rx2_Winding))", f"k13", ""],
         ["abs(Matrix.CplCoef(Rx1_Winding,Rx2_Winding))", f"k23", ""],
