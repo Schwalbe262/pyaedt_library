@@ -44,9 +44,18 @@ class Transformer_winding:
 
         x_section_type = kwargs.get("type", "Circle") # Rectangle, Circle
         if x_section_type == "Circle" :
+            orientation = kwargs.get("orientation", "Auto")
+            xsection_topwidth = kwargs.get("top_width", "0mm")
             xsection_width = kwargs.get("coil_diameter", "5mm")
             xsection_height = kwargs.get("height", "0mm")
         elif x_section_type == "Rectangle" :
+            orientation = kwargs.get("orientation", "Auto")
+            xsection_topwidth = kwargs.get("top_width", "0mm")
+            xsection_width = kwargs.get("width", "5mm")
+            xsection_height = kwargs.get("height", "0.5mm")
+        elif x_section_type == "Isosceles Trapezoid" :
+            orientation = kwargs.get("orientation", "Auto")
+            xsection_topwidth = kwargs.get("top_width", "3mm")
             xsection_width = kwargs.get("width", "5mm")
             xsection_height = kwargs.get("height", "0.5mm")
         else :
@@ -61,7 +70,8 @@ class Transformer_winding:
             raise ValueError("points is None")
 
         polyline_obj = self.design.modeler.create_polyline(
-            points=points, name=name, xsection_type=x_section_type, xsection_width=xsection_width, xsection_height=xsection_height, xsection_num_seg=xsection_num_seg)
+            points=points, name=name, xsection_orient=orientation,
+            xsection_type=x_section_type, xsection_width=xsection_width, xsection_height=xsection_height, xsection_num_seg=xsection_num_seg, xsection_topwidth=xsection_topwidth)
         polyline_obj.point_list = points
 
         if color is not None :

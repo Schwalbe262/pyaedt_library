@@ -1,6 +1,7 @@
 from .core import Core
 from .winding import Winding
 from .transformer_winding import Transformer_winding
+from .PCB_winding import PCB_winding
 from .face import Face
 
 class Model3d :
@@ -8,6 +9,8 @@ class Model3d :
     def __init__(self, design) :
         self.core = Core(design)
         self.winding = Winding(design)
+        self.transformer_winding = Transformer_winding(design)
+        self.pcb_winding = PCB_winding(design)
         self.face = Face(design)
 
         self.design = design

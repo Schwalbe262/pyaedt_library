@@ -162,6 +162,8 @@ class pyDesign:
 
         if resolution == 1:
             value = int(value)
+        else:
+            value = float(value)
             
         return value
 
