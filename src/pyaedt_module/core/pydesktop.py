@@ -87,7 +87,7 @@ class pyDesktop(AEDTDesktop) :
     def load_project(self, path: Optional[str] = None, name: Optional[str] = None) -> pyProject:
         project = pyProject(self, path=path, name=name, forced_load=True)
         return project
-        
+
 
     # legacy code
     # def get_project_list(self) :
@@ -134,7 +134,7 @@ class pyDesktop(AEDTDesktop) :
         project_names = self.project_list
 
         for project_name in project_names:
-            project = pyProject(self, name=project_name, load=True)
+            project = pyProject(self, name=project_name)
             projects.append(project)
             
         return projects

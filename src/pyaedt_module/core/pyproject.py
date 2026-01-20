@@ -12,6 +12,21 @@ class pyProject:
     def __init__(self, desktop, path: Optional[str] = None, name: Optional[str] = None, forced_load: bool = True) -> None:
 
 
+        self.desktop = desktop
+
+        # project 객체를 가져와서 저장 (이 객체의 모든 메서드/속성을 pyProject가 위임받음)
+        self.project = self._get_project(path=path, name=name, forced_load=forced_load)
+        
+        # underlying AEDT project object (for __getattr__ forwarding)
+        # self.proj는 self.project와 동일하지만, 명시적으로 유지
+        self.proj = self.project
+
+        self.solver_instance = None
+
+
+
+    def _get_project(self, path: Optional[str] = None, name: Optional[str] = None, forced_load: bool = True):
+
         #가능한 입력 케이스
 
         # path를 None으로 둠
@@ -26,8 +41,7 @@ class pyProject:
             # name을 simulation으로 둠 => ~~/~~/~~/simulation.aedt 형태로 생성
         # path를 ~~~/~~/~~ 형태로 입력
 
-
-        self.desktop = desktop
+        # 이미 project도 열려있고 해당 파일도 있는데 또 요청하는 경우 무시 필요
 
         # name 기본값 설정
         if name is None:
@@ -55,7 +69,6 @@ class pyProject:
 
         # 이 시점에서는 path의 format은 ~~/~~/~~/simulation.aedt 형태로 맞춰짐
 
-
         # path의 디렉토리가 없으면 생성
         project_dir = os.path.dirname(path)
         if project_dir and not os.path.exists(project_dir):
@@ -63,6 +76,9 @@ class pyProject:
 
         if os.path.isfile(path):
             # 해당하는 파일이 이미 있다면 aedt 파일 load 동작
+            if name in self.desktop.project_list: # 이미 열려있는 객체를 또 불러오는 경우
+                project = self.desktop.odesktop.SetActiveProject(name)
+                return project
             if forced_load is True:
                 lockfile = path + ".lock"
                 if os.path.exists(lockfile):
@@ -74,28 +90,21 @@ class pyProject:
                             os.remove(lockfile)
                         except: 
                             pass
-            self.project = self.desktop.odesktop.OpenProject(path)
+            project = self.desktop.odesktop.OpenProject(path)
         else:
             if name not in self.desktop.project_list: 
                 # 해당 project가 desktop 세션 안에 없는경우 -> 새 프로젝트 생성
-                self.project = self.desktop.odesktop.NewProject(path)
-                self.project.SaveAs(path, True)
+                project = self.desktop.odesktop.NewProject(path)
+                project.SaveAs(path, True)
             else:
                 # 해당 project가 desktop 세션 안에 이미 있는 경우 -> 객체만 받아옴
-                self.project = self.desktop.odesktop.SetActiveProject(name)
+                project = self.desktop.odesktop.SetActiveProject(name)
 
-        
-
-        # underlying AEDT project object (for __getattr__ forwarding)
-        self.proj = self.project
-
-        # project attributes
-        # self._get_project_attribute()
-
-        self.solver_instance = None
+        return project
 
 
     def __getattr__(self, name):
+        # project class 상속
         return getattr(self.proj, name)
     
     def __dir__(self):
@@ -241,7 +250,7 @@ class pyProject:
         Returns the name of the project.
         Automatically updates each time it's accessed.
         """
-        return self.GetName()
+        return self.project.GetName()
 
     
     @property
@@ -250,7 +259,7 @@ class pyProject:
         Returns the path of the project.
         Automatically updates each time it's accessed.
         """
-        return self.GetPath()
+        return self.project.GetPath()
     
     @property
     def aedt_path(self) -> str:
