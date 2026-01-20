@@ -17,16 +17,23 @@ class DesignList(list):
         if isinstance(key, str):
             for idx, design in enumerate(self):
                 try:
-                    # name property를 통해 이름 가져오기 (solver_instance.design_name 반환)
+                    # __dict__에서 직접 _name 속성 확인 (property 우회하여 크래시 방지)
                     design_name = None
-                    if hasattr(design, 'solver_instance') and design.solver_instance is not None:
-                        try:
-                            if hasattr(design.solver_instance, 'design_name'):
-                                design_name = design.solver_instance.design_name
-                        except Exception:
-                            pass
                     
-                    # solver_instance가 없거나 design_name이 없으면 name property 시도
+                    # 방법 1: __dict__에서 _name 직접 확인
+                    if hasattr(design, '__dict__'):
+                        design_name = design.__dict__.get('_name', None)
+                    
+                    # 방법 2: design 객체의 GetName() 메서드 직접 시도 (가장 안전)
+                    if design_name is None:
+                        if hasattr(design, 'design') and design.design is not None:
+                            try:
+                                if hasattr(design.design, 'GetName'):
+                                    design_name = design.design.GetName()
+                            except Exception:
+                                pass
+                    
+                    # 방법 3: name property 시도 (마지막 수단)
                     if design_name is None:
                         try:
                             design_name = design.name
@@ -35,7 +42,7 @@ class DesignList(list):
                     
                     if design_name == key:
                         return design
-                except Exception:
+                except Exception as e:
                     # 에러 발생하면 다음 design으로 넘어감
                     continue
             raise KeyError(f"Design '{key}' not found")
@@ -45,76 +52,25 @@ class DesignList(list):
 
 
 class pyDesign:
-    def __init__(self, project, name=None, solver=None, solution=None):
+    def __init__(self, project, name=None, solver=None, solution=None, design=None):
         self.project = project
         self.NUM_CORE = 4
 
-        # solver list
-        # HFSS
-        # Maxwell 3D
-        # maxwell 2D
-        # Icepak
-        # Mechanical
-        # Circuit Design
 
-        self.solver_instance = self._create_design(project, name, solver, solution)
+        if design is not None:
+            self.design = design
+            self._name = design.GetName()
+            self._solver = design.GetDesignType()
+            self.solution = design.GetSolutionType() if hasattr(design, "GetSolutionType") else None
+        else :
+            self._name = name
+            self._solver = solver.lower() if solver is not None else None
+            self.solution = solution
+            self.solver_instance = None 
 
+        self._store = {}
 
-    
-    def _create_design(self, project, name, solver, solution):
-
-        solver = self._solver_name(solver)
-        solution = self._solution_name(solver, solution)
-
-        for design in project.project.GetDesigns():
-            design_name = design.GetName()
-            if design_name == name:
-                self.solver_instance = project.project.SetActiveDesign(name)
-                return self.solver_instance
         
-        self.solver_instance = project.project.InsertDesign(solver, name, solution, "")
-        return self.solver_instance
-
-
-
-    def _solver_name(self, solver):
-
-        if solver.lower().replace(" ", "") == "hfss":
-            return "HFSS"
-        elif solver.lower().replace(" ", "") == "maxwell3d":
-            return "Maxwell 3D"
-        elif solver.lower().replace(" ", "") == "maxwell2d":
-            return "Maxwell 2D"
-        elif solver.lower().replace(" ", "") == "icepak":
-            return "Icepak"
-        elif solver.lower().replace(" ", "") == "mechanical":
-            return "Mechanical"
-        elif solver.lower().replace(" ", "") == "circuitdesign" or solver.lower().replace(" ", "") == "circuit":
-            return "Circuit Design"
-        else:
-            return solver
-
-
-
-    def _solution_name(self, solver, solution):
-
-        if solution is None:
-            if solver == "HFSS":
-                return "HFSS Terminal Network"
-            elif solver == "Maxwell 3D":
-                return "Magnetostatic"
-            elif solver == "Maxwell 2D":
-                return "Magnetostatic"
-            elif solver == "Icepak":
-                return "SteadyState TemperatureAndFlow"
-            elif solver == "Mechanical":
-                return ""
-            elif solver == "Circuit Design":
-                return "None"
-            else:
-                return None
-        else:
-            return solution
 
     
     def __getattr__(self, name):
@@ -176,6 +132,67 @@ class pyDesign:
     def __repr__(self):
         return f"pyDesign(name={self.name}, solver={self.solver}, solution={self.solution}, store={self._store})"
 
+
+    @classmethod
+    def create_design(cls, project, name=None, solver=None, solution=None):
+        design = cls(project, name=name, solver=solver, solution=solution)
+
+        solver = solver.lower()
+        if solver == "maxwell3d" or solver == "maxwell" :
+            design._setup_maxwell()
+        elif solver == "hfss":
+            design._setup_hfss()
+        elif solver == "circuit":
+            design._setup_circuit()
+        elif solver == "icepak":
+            design._setup_icepak()
+        
+        return design
+    
+
+    def _setup_maxwell(self):
+        if self.solution is None:
+            self.solution = "EddyCurrent"
+
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Maxwell3d(project=None, design=self.name, solution_type=self.solution)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+            
+            
+    def _setup_hfss(self):
+        if self.solution is None:
+            self.solution = "HFSS Terminal Network"
+        # self.project.InsertDesign("HFSS", self.name, self.solution, "")
+        # self.solver_instance = self.project.SetActiveDesign(self.name)
+
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = HFSS(project=None, design=self.name, solution_type=self.solution)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+        
+
+    def _setup_circuit(self):
+        
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Circuit(project=None, design=self.name)
+
+        self.solver_instance.design = self
+
+        self._get_module()
+
+
+    def _setup_icepak(self):
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        self.solver_instance = Icepak(project=None, design=self.name)
+
+        self.solver_instance.design = self
+
+        self._get_module()
 
 
     def _get_module(self):
@@ -336,15 +353,17 @@ class pyDesign:
 
     @property
     def name(self):
-        return self.solver_instance.GetName()
+        """Returns the design name. If solver_instance exists, returns its design_name, otherwise returns the stored name."""
+        if self.solver_instance and hasattr(self.solver_instance, 'design_name'):
+            return self.solver_instance.design_name
+        return self._name
     
     @property
     def solver(self):
-        return self.solver_instance.GetDesignType()
-
-    @property
-    def solution(self):
-        return self.solver_instance.GetSolutionType()
+        """Returns the solver type. If solver_instance exists, returns its solver, otherwise returns the stored solver."""
+        if self.solver_instance and hasattr(self.solver_instance, 'solver'):
+            return self.solver_instance.solver
+        return self._solver
 
 
 

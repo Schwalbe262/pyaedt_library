@@ -5,7 +5,25 @@ import stat
 import time
 from typing import Optional
 
-from .pydesign import pyDesign
+from .pydesign import pyDesign, DesignList
+
+
+
+
+class ProjectList(list):
+    """
+    커스텀 리스트 클래스: 이름으로 project에 접근할 수 있게 함
+    """
+    def __getitem__(self, key):
+        # 문자열이면 이름으로 검색
+        if isinstance(key, str):
+            for project in self:
+                if project.name == key:
+                    return project
+            raise KeyError(f"Project '{key}' not found")
+        # 정수면 일반 리스트처럼 인덱스로 접근
+        return super().__getitem__(key)
+
 
 class pyProject:
 
@@ -222,7 +240,8 @@ class pyProject:
         Returns:
             pyDesign: The created design object.
         """
-        design = pyDesign.create_design(self, name=name, solver=solver, solution=solution)
+        # design = pyDesign.create_design(self, name=name, solver=solver, solution=solution)
+        design = pyDesign(self, name=name, solver=solver, solution=solution)
         return design
 
 
@@ -230,18 +249,36 @@ class pyProject:
 
 
     @property
-    def designs(self) -> list[pyDesign]:
+    def designs(self) -> DesignList:
         """
         Returns a list of pyDesign objects for all designs in this project.
         Automatically updates each time it's accessed.
         
         Returns:
-            list[pyDesign]: List of pyDesign objects for all designs in this project.
+            DesignList: Custom list of pyDesign objects. Can be accessed by name or index.
+            
+        Example:
+            >>> designs = project.designs
+            >>> design = project.designs["HFSS_design1"]  # 이름으로 접근
+            >>> design = project.designs[0]  # 인덱스로 접근
         """
-        designs_list = []
-        for design in self.project.GetDesigns():
-            designs_list.append(pyDesign(self, design=design))
-        return designs_list
+        designs = DesignList()
+
+        try:
+            for design in self.project.GetDesigns():
+                try:
+                    design_name = design.GetName()
+                    solver_type = design.GetDesignType()
+                    # pyDesign은 name과 solver만 필요 (기존 design을 로드)
+                    designs.append(pyDesign(self, name=design_name, solver=solver_type))
+                except Exception as e:
+                    # 개별 design 생성 실패 시 건너뛰기
+                    print(f"Warning: Failed to create pyDesign for design: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error getting designs: {e}")
+            
+        return designs
 
 
     @property

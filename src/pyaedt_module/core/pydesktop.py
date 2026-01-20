@@ -4,7 +4,7 @@ from typing import Optional
 
 from ansys.aedt.core import Desktop as AEDTDesktop
 
-from .pyproject import pyProject
+from .pyproject import pyProject, ProjectList
 
 import socket # for grpc
 
@@ -122,15 +122,20 @@ class pyDesktop(AEDTDesktop) :
 
 
     @property
-    def projects(self) -> list[pyProject]:
+    def projects(self) -> ProjectList:
         """
         Returns a list of pyProject objects for all open projects.
         Automatically updates each time it's accessed.
         
         Returns:
-            list[pyProject]: List of pyProject objects for all open projects.
+            ProjectList: List of pyProject objects. Can be accessed by name or index.
+            
+        Example:
+            >>> projects = desktop.projects
+            >>> project = desktop.projects["simulation2"]  # 이름으로 접근
+            >>> project = desktop.projects[0]  # 인덱스로 접근
         """
-        projects = []
+        projects = ProjectList()
         project_names = self.project_list
 
         for project_name in project_names:
