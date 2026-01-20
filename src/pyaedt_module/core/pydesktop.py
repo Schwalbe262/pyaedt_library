@@ -66,10 +66,12 @@ class pyDesktop(AEDTDesktop) :
             return False
 
 
-    def create_project(self, path=None) :
+    def create_project(self, path=os.getcwd(), name=None) :
+
         project = pyProject(self, path=path)
         self.projects.append(project)
         return project
+
 
     def load_project(self, path: str):
         """
@@ -84,14 +86,42 @@ class pyDesktop(AEDTDesktop) :
         self.projects.append(project)
         return project
 
-
-    def get_project_list(self) :
+    # legacy code
+    # def get_project_list(self) :
         
-        project_list = []
-        for project_name in self.project_list:
-            project = pyProject(self, name=project_name, load=True)
-            project_list.append(project)
+    #     project_list = []
+    #     for project_name in self.project_list:
+    #         project = pyProject(self, name=project_name, load=True)
+    #         project_list.append(project)
 
-        return project_list
+    #     return project_list
+
+
+    # desktop 객체에 열려있는 project를 이름-객체 쌍의 딕셔너리 형태로 반환
+    def get_project_list(self) -> dict[str, pyProject]:
+        """
+        Returns a dictionary mapping project names to pyProject objects.
+        
+        Returns:
+            dict[str, pyProject]: Dictionary with project names as keys and pyProject objects as values.
+            
+        Example:
+            >>> projects = desktop.get_project_list()
+            >>> my_project = projects["MyProject"]  # 이름으로 객체 찾기
+        """
+        projects = {}
+        project_names = self.project_list
+
+        for project_name in project_names:
+            project = pyProject(self, name=project_name, load=True)
+            projects[project_name] = project
+            
+        return projects
+
+
+    def debug2(self) :
+        print("debug mode")
+
+
 
 
