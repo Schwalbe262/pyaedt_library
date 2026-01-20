@@ -8,16 +8,32 @@ from .pydesign import pyDesign
 
 class pyProject:
 
-    def __init__(self, desktop) :
+    def __init__(self, desktop, path=None, name=None, load=False) :
 
         self.desktop = desktop
-        self.desktop.odesktop.NewProject(pyaedt.generate_unique_project_name())
-
-        self.proj = desktop.odesktop.GetActiveProject()
-        
-        self._get_project_attribute()
 
         self.designs = []
+
+        if load is False:
+            if path is None:
+                path = pyaedt.generate_unique_project_name()
+                self.project = self.desktop.odesktop.NewProject(path)
+            else:
+                self.project = self.desktop.odesktop.NewProject(path)
+                self.project.SaveAs(path, True)
+        else:
+            self.project = self.desktop.odesktop.SetActiveProject(name)
+
+        # underlying AEDT project object (for __getattr__ forwarding)
+        self.proj = self.project
+
+        # project attributes
+        self._get_project_attribute()
+
+        # designs (loaded project에서만 채움)
+        if load is True:
+            self._get_designs()
+
         self.solver_instance = None
 
 
@@ -82,6 +98,7 @@ class pyProject:
         os.chmod(path, stat.S_IWRITE)
         func(path)
 
+
     def delete_project_folder(self, path=None, retries=10, delay=1):
         if path is None:
             path = self.GetPath()
@@ -98,10 +115,14 @@ class pyProject:
             return False
 
 
-
-    def create_design(self, name, solver, solution) :
-
-        design = pyDesign.create_design(self, name, solver, solution)
+    def create_design(self, name, solver, solution=None):
+        design = pyDesign.create_design(self, name=name, solver=solver, solution=solution)
         self.designs.append(design)
         return design
-    
+
+
+    def _get_designs(self) :
+        self.designs = []
+        for design in self.project.GetDesigns():
+            self.designs.append(pyDesign(self, design=design))
+        return self.designs

@@ -45,7 +45,6 @@ class pyDesktop(AEDTDesktop) :
 
 
     def create_folder(self, folder_name):
-
         current_dir = os.getcwd()
         folder_path = os.path.join(current_dir, folder_name)
 
@@ -56,7 +55,6 @@ class pyDesktop(AEDTDesktop) :
 
 
     def kill_process(self):
-
         try:
             proc = psutil.Process(self.pid)
             proc.kill()
@@ -68,9 +66,32 @@ class pyDesktop(AEDTDesktop) :
             return False
 
 
-    def create_project(self) :
-
-        project = pyProject(self)
+    def create_project(self, path=None) :
+        project = pyProject(self, path=path)
         self.projects.append(project)
         return project
+
+    def load_project(self, path: str):
+        """
+        Load an existing AEDT project file and return pyProject wrapper.
+        """
+        # AEDTDesktop에는 load_project(path)가 있는 버전도 있지만,
+        # 여기서는 현재 세션의 odesktop API로 명시적으로 로드한다.
+        # OpenProject는 성공 시 프로젝트 이름을 반환하거나 active project를 변경한다.
+        self.odesktop.OpenProject(path)
+        name = self.odesktop.GetActiveProject().GetName()
+        project = pyProject(self, name=name, load=True)
+        self.projects.append(project)
+        return project
+
+
+    def get_project_list(self) :
+        
+        project_list = []
+        for project_name in self.project_list:
+            project = pyProject(self, name=project_name, load=True)
+            project_list.append(project)
+
+        return project_list
+
 

@@ -1,6 +1,7 @@
 import math
 import re
 from collections import namedtuple
+import time
 
 class Transformer_winding:
 
@@ -260,3 +261,143 @@ class Transformer_winding:
 
         return points
 
+
+    def foil_winding(self, name, **kwargs) :
+
+        """
+        사용 예시
+
+        winding_params1 = {
+            "N" : sim1.N1,
+            "N_layer" : sim1.N1_layer,
+            "x" : "w1 + 2*N1_space_w",
+            "y" : "l1 + 2*N1_space_l",
+            "coil_diameter" : "N1_coil_diameter",
+            "coil_zgap" : "N1_coil_zgap",
+            "coil_layer_x_gap" : "N1_layer_gap",
+            "coil_layer_y_gap" : "N1_layer_gap",
+            "color" : [255, 50, 50],
+            "transparency" : 0,
+            "offset" : ["0mm", "-(l1+l2)/2", f"{offset1}mm"]
+        }
+        points1 = sim1.winding_points(name="winding1", **winding_params1)
+
+        
+        """
+
+        """
+        예시
+
+        modeler = Transformer_winding(simulation.design)
+        winding_point = modeler.winding_points(**kwargs)
+        winding = modeler.create_polyline(name=name, points=winding_point,**kwargs)
+
+        """
+
+        raw_N = kwargs.get("N", 10)
+        raw_NN = kwargs.get("NN", 2)
+
+        # N과 N_layer는 Python 로직(range, if)에 사용되므로 정수여야 합니다.
+        # 문자열로 들어올 경우, 정수로 변환을 시도하고, 실패하면 디자인 변수로 간주하여 값을 가져옵니다.
+        try:
+            N = int(raw_N)
+        except (ValueError, TypeError):
+            # get_variable_value가 반환하는 값은 문자열일 수 있으므로, 숫자 타입으로 변환합니다.
+            N = int(float(self.design.get_variable_value(raw_N)))
+
+        try:
+            NN = int(raw_NN)
+        except (ValueError, TypeError):
+            NN = int(float(self.design.get_variable_value(raw_NN)))
+
+        if NN == 0 :
+            NN = 10000
+
+        x_pos = kwargs.get("x_pos", "100mm")
+        y_pos = kwargs.get("y_pos", "100mm")
+        inner = kwargs.get("inner", "1mm")
+        outer = kwargs.get("outer", "3mm")
+        width = kwargs.get("width", "10mm")
+        height = kwargs.get("height", "10mm")
+        terminal_length = kwargs.get("terminal_length", "30mm")
+        terminal_width = kwargs.get("terminal_width", "10mm")
+        material = kwargs.get("material", "copper")
+
+        # x = "x_pos"
+        # y = "y_pos"
+        # inner = "(width+inner)"
+        # outer = "(width+outer)"
+
+        x = x_pos
+        y = y_pos
+        inner = f'({width} + {inner})'
+        outer = f'({width} + {outer})'
+
+
+        points = []
+        points_terminal1 = []
+        points_terminal2 = []
+
+        Ns = 0
+        NNs = 0
+
+        for i in range(N) :
+            
+            if i == 0 : # start point
+                points.append([f'{x}', f'0mm', f'0mm'])
+                points_terminal1.append([f'{x}', f'0mm', f'0mm - ({height})/2'])
+                points_terminal1.append([f'{x}', f'0mm', f'0mm + ({height})/2+({terminal_length})'])
+
+            points.append([f'{x} - {Ns}*{inner} - {NNs}*{outer}', f'-{y} + {Ns}*{inner} + {NNs}*{outer}', f'0mm'])
+            points.append([f'-{x} + {Ns}*{inner} + {NNs}*{outer}', f'-{y} + {Ns}*{inner} + {NNs}*{outer}', f'0mm'])
+            points.append([f'-{x} + {Ns}*{inner} + {NNs}*{outer}', f'{y} - {Ns}*{inner} - {NNs}*{outer}', f'0mm'])
+
+            if i % NN != 0 :
+                points.append([f'{x} - {Ns+1}*{inner} - {NNs}*{outer}', f'{y} - {Ns}*{inner} - {NNs}*{outer}', f'0mm'])
+                if i == N-1 :
+                    points.append([f'{x} - {Ns+1}*{inner} - {NNs}*{outer}', f'0mm', f'0mm'])
+                    points_terminal2.append([f'{x} - {Ns+1}*{inner} - {NNs}*{outer}', f'0mm', f'0mm - ({height})/2'])
+                    points_terminal2.append([f'{x} - {Ns+1}*{inner} - {NNs}*{outer}', f'0mm', f'0mm + ({height})/2+({terminal_length})'])
+                Ns = Ns+1
+            else :
+                points.append([f'{x} - {Ns}*{inner} - {NNs+1}*{outer}', f'{y} - {Ns}*{inner} - {NNs}*{outer}', f'0mm'])
+                if i == N-1 : # end point
+                    points.append([f'{x} - {Ns}*{inner} - {NNs+1}*{outer}', f'0mm', f'0mm'])
+                    points_terminal2.append([f'{x} - {Ns}*{inner} - {NNs+1}*{outer}', f'0mm', f'0mm - ({height})/2'])
+                    points_terminal2.append([f'{x} - {Ns}*{inner} - {NNs+1}*{outer}', f'0mm', f'0mm + ({height})/2+({terminal_length})'])
+                NNs = NNs+1
+
+
+
+        orientation = "Auto"
+        x_section_type = "Rectangle"
+        xsection_width = width
+        xsection_height = height
+        xsection_num_seg = 0
+        xsection_topwidth = "0mm"
+
+        polyline_obj = self.design.modeler.create_polyline(
+                    points=points, name=name, xsection_orient=orientation,
+                    xsection_type=x_section_type, xsection_width=xsection_width, xsection_height=xsection_height, xsection_num_seg=xsection_num_seg, xsection_topwidth=xsection_topwidth)
+
+        polyline_obj.color = [255, 0, 0]
+        polyline_obj.transparency = 0
+
+
+        xsection_width = terminal_width
+        xsection_height = width
+
+        polyline_obj1 = self.design.modeler.create_polyline(
+                    points=points_terminal1, name=name + "_terminal_in", xsection_orient=orientation,
+                    xsection_type=x_section_type, xsection_width=xsection_width, xsection_height=xsection_height, xsection_num_seg=xsection_num_seg, xsection_topwidth=xsection_topwidth)
+
+        polyline_obj2 = self.design.modeler.create_polyline(
+                    points=points_terminal2, name=name + "_terminal_out", xsection_orient=orientation,
+                    xsection_type=x_section_type, xsection_width=xsection_width, xsection_height=xsection_height, xsection_num_seg=xsection_num_seg, xsection_topwidth=xsection_topwidth)
+
+        polyline_obj.unite([polyline_obj1, polyline_obj2])
+
+        polyline_obj.material_name = material
+
+
+        return polyline_obj

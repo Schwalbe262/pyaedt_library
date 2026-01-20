@@ -8,16 +8,25 @@ from .post_processing import PostProcessing
 import numpy as np
 
 class pyDesign:
-    def __init__(self, project, name=None, solver=None, solution=None):
+    def __init__(self, project, name=None, solver=None, solution=None, design=None):
         self.project = project
         self.NUM_CORE = 4
-        self.name = name
-        self.solver = solver.lower() if solver is not None else None
-        self.solution = solution
 
-        self.solver_instance = None 
+
+        if design is not None:
+            self.design = design
+            self.name = design.GetName()
+            self.solver = design.GetDesignType()
+            self.solution = design.GetSolutionType() if hasattr(design, "GetSolutionType") else None
+        else :
+            self.name = name
+            self.solver = solver.lower() if solver is not None else None
+            self.solution = solution
+            self.solver_instance = None 
 
         self._store = {}
+
+        
 
     
     def __getattr__(self, name):

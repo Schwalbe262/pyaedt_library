@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyaedt-library"
+version = "0.1.0"
+description = "Common PyAEDT helper library"
+requires-python = ">=3.9"
+dependencies = [
+  "pyaedt>=0.15",
+  "pyedb",
+  "ansys-pythonnet",
+  "clr_loader",
+  "grpcio",
+  "rpyc",
+  "numpy",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

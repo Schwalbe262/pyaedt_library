@@ -1,0 +1,23 @@
+{
+  "Tx_turns": {
+    "name": "Tx_turns",
+    "min_value": 3,
+    "max_value": 10,
+    "resolution": 1,
+    "unit": "turn"
+  },
+  "Rx_turns": {
+    "name": "Rx_turns",
+    "min_value": 3,
+    "max_value": 10,
+    "resolution": 1,
+    "unit": "turn"
+  },
+  "w1": {
+    "name": "w1",
+    "min_value": 100.0,
+    "max_value": 300.0,
+    "resolution": 0.1,
+    "unit": "mm"
+  }
+}
