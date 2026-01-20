@@ -119,6 +119,22 @@ class pyDesktop(AEDTDesktop) :
         return projects
 
 
+
+    @property
+    def projects(self) -> list[pyProject]:
+        """
+        Returns a list of pyProject objects for all open projects.
+        """
+        projects = []
+        project_names = self.project_list
+
+        for project_name in project_names:
+            project = pyProject(self, name=project_name, load=True)
+            projects.append(project)
+            
+        return projects
+
+
     def debug2(self) :
         print("debug mode")
 
