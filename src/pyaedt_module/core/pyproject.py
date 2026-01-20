@@ -3,36 +3,94 @@ import os
 import shutil
 import stat
 import time
+from typing import Optional
 
 from .pydesign import pyDesign
 
 class pyProject:
 
-    def __init__(self, desktop, path=None, name=None, load=False) :
+    def __init__(self, desktop, path: Optional[str] = None, name: Optional[str] = None, forced_load: bool = True) -> None:
+
+
+        #가능한 입력 케이스
+
+        # path를 None으로 둠
+            # name을 None으로 둠 => 작동 확인
+            # name을 임의의 이름으로 둠 => 작동 확인
+        # path를 ~~/~~/~~/simulation.aedt 형태로 입력
+            # name을 None으로 둠 => 작동 확인
+            # name을 simulation으로 둠 => 작동 확인
+            # name을 simulation.aedt로 둠 => 작동 확인
+        # path를 ~~/~~/~~/simulation 형태로 입력
+            # name을 None으로 둠 => 작동하나 simulation은 경로로 인식함
+            # name을 simulation으로 둠 => ~~/~~/~~/simulation.aedt 형태로 생성
+        # path를 ~~~/~~/~~ 형태로 입력
+
 
         self.desktop = desktop
 
-        self.designs = []
+        # name 기본값 설정
+        if name is None:
+            name = pyaedt.generate_unique_project_name() # 해당 값의 포맷 예시 : 'C:\\Users\\peets\\AppData\\Local\\Temp\\pyaedt_prj_COM\\Project_QWI.aedt'
+            name = os.path.splitext(os.path.basename(name))[0]
+        # name이 .aedt로 끝나면 확장자를 떼어낸다
+        if name.endswith('.aedt'):
+            name = os.path.splitext(name)[0]
+        # path 처리: .aedt 확장자가 있으면 그대로 사용, 없으면 path/name.aedt 형태로 만들기
+        if path is None:
+            path = os.getcwd()
 
-        if load is False:
-            if path is None:
-                path = pyaedt.generate_unique_project_name()
-                self.project = self.desktop.odesktop.NewProject(path)
-            else:
+
+        if path.endswith('.aedt'):
+            # if path format : ~~/~~/~~/simulation.aedt
+            name = os.path.splitext(os.path.basename(path))[0]
+        elif path.endswith(name):
+            # if path format : ~~/~~/~~/simulation
+            path = path + ".aedt"
+        elif not path.endswith('.aedt'):
+            # if path format : ~~/~~/~~
+            path = os.path.join(path, name + ".aedt")
+        else:
+            pass
+
+        # 이 시점에서는 path의 format은 ~~/~~/~~/simulation.aedt 형태로 맞춰짐
+
+
+        # path의 디렉토리가 없으면 생성
+        project_dir = os.path.dirname(path)
+        if project_dir and not os.path.exists(project_dir):
+            os.makedirs(project_dir, exist_ok=True)
+
+        if os.path.isfile(path):
+            # 해당하는 파일이 이미 있다면 aedt 파일 load 동작
+            if forced_load is True:
+                lockfile = path + ".lock"
+                if os.path.exists(lockfile):
+                    try: 
+                        os.remove(lockfile)
+                    except: 
+                        try: 
+                            os.chmod(lockfile, stat.S_IWRITE)
+                            os.remove(lockfile)
+                        except: 
+                            pass
+            self.project = self.desktop.odesktop.OpenProject(path)
+        else:
+            if name not in self.desktop.project_list: 
+                # 해당 project가 desktop 세션 안에 없는경우 -> 새 프로젝트 생성
                 self.project = self.desktop.odesktop.NewProject(path)
                 self.project.SaveAs(path, True)
-        else:
-            self.project = self.desktop.odesktop.SetActiveProject(name)
+            else:
+                # 해당 project가 desktop 세션 안에 이미 있는 경우 -> 객체만 받아옴
+                self.project = self.desktop.odesktop.SetActiveProject(name)
+
+        
 
         # underlying AEDT project object (for __getattr__ forwarding)
         self.proj = self.project
 
         # project attributes
-        self._get_project_attribute()
-
-        # designs (loaded project에서만 채움)
-        if load is True:
-            self._get_designs()
+        # self._get_project_attribute()
 
         self.solver_instance = None
 
@@ -47,19 +105,27 @@ class pyProject:
         return default_dir
 
 
-    def _get_project_attribute(self) :
-
-        self.name = self.GetName()
-        self.path = self.GetPath()
-        self.aedt_path = os.path.join(self.path, self.name + ".aedt")
+    def _get_project_attribute(self) -> None:
+        """
+        Updates project attributes (name, path, aedt_path) from the underlying project object.
+        """
+        # name과 path는 property이므로 private 변수에 저장
+        self._name = self.GetName()
+        self._path = self.GetPath()
+        self.aedt_path = os.path.join(self._path, self._name + ".aedt")
 
     
-    def save_project(self, path=None) :
-
-        if path == None :
+    def save_project(self, path: Optional[str] = None) -> None:
+        """
+        Saves the project to the specified path.
+        
+        Args:
+            path: Path where to save the project. If None, saves to current directory.
+        """
+        if path is None:
             path = os.path.join(os.getcwd(), self.name + ".aedt")
-        else :
-            path = os.path.normpath(os.path.abspath(path)) # OS compatibility
+        else:
+            path = os.path.normpath(os.path.abspath(path))  # OS compatibility
 
         # make dir
         save_dir = os.path.dirname(path)
@@ -78,8 +144,10 @@ class pyProject:
         self._get_project_attribute()
 
 
-    def delete_project(self) :
-
+    def delete_project(self) -> None:
+        """
+        Deletes the project files (.aedt, .aedt.lock, .aedtresults folder).
+        """
         base_name = os.path.splitext(os.path.basename(self.aedt_path))[0]
 
         file_aedt = os.path.join(self.path, base_name + ".aedt")
@@ -94,12 +162,30 @@ class pyProject:
             shutil.rmtree(folder_results)
 
 
-    def _remove_readonly(self, func, path, excinfo):
+    def _remove_readonly(self, func, path: str, excinfo) -> None:
+        """
+        Helper function to remove readonly attribute from files during deletion.
+        
+        Args:
+            func: Function to retry after removing readonly attribute.
+            path: Path to the file/directory.
+            excinfo: Exception information.
+        """
         os.chmod(path, stat.S_IWRITE)
         func(path)
 
-
-    def delete_project_folder(self, path=None, retries=10, delay=1):
+    def delete_project_folder(self, path: Optional[str] = None, retries: int = 10, delay: float = 1.0) -> bool:
+        """
+        Deletes the project folder with retry mechanism.
+        
+        Args:
+            path: Path to the project folder. If None, uses the project's current path.
+            retries: Number of retry attempts.
+            delay: Delay between retries in seconds.
+            
+        Returns:
+            bool: True if deletion was successful, False otherwise.
+        """
         if path is None:
             path = self.GetPath()
         
@@ -115,14 +201,62 @@ class pyProject:
             return False
 
 
-    def create_design(self, name, solver, solution=None):
+    def create_design(self, name: str, solver: str, solution: Optional[str] = None) -> pyDesign:
+        """
+        Creates a new design in this project.
+        
+        Args:
+            name: Name of the design.
+            solver: Solver type (e.g., "HFSS", "Maxwell 3D").
+            solution: Solution name. If None, a default solution is used.
+            
+        Returns:
+            pyDesign: The created design object.
+        """
         design = pyDesign.create_design(self, name=name, solver=solver, solution=solution)
-        self.designs.append(design)
         return design
 
 
-    def _get_designs(self) :
-        self.designs = []
+
+
+
+    @property
+    def designs(self) -> list[pyDesign]:
+        """
+        Returns a list of pyDesign objects for all designs in this project.
+        Automatically updates each time it's accessed.
+        
+        Returns:
+            list[pyDesign]: List of pyDesign objects for all designs in this project.
+        """
+        designs_list = []
         for design in self.project.GetDesigns():
-            self.designs.append(pyDesign(self, design=design))
-        return self.designs
+            designs_list.append(pyDesign(self, design=design))
+        return designs_list
+
+
+    @property
+    def name(self) -> str:
+        """
+        Returns the name of the project.
+        Automatically updates each time it's accessed.
+        """
+        return self.GetName()
+
+    
+    @property
+    def path(self) -> str:
+        """
+        Returns the path of the project.
+        Automatically updates each time it's accessed.
+        """
+        return self.GetPath()
+    
+    @property
+    def aedt_path(self) -> str:
+        """
+        Returns the full path to the .aedt file.
+        Automatically updates each time it's accessed.
+        """
+        return os.path.join(self.path, self.name + ".aedt")
+

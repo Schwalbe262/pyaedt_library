@@ -1,5 +1,6 @@
 import os
 import psutil
+from typing import Optional
 
 from ansys.aedt.core import Desktop as AEDTDesktop
 
@@ -39,12 +40,19 @@ class pyDesktop(AEDTDesktop) :
         )
 
         self.disable_autosave()
-        self.pid = self.aedt_process_id # get session pid number
-
-        self.projects = []
+        self.pid = self.aedt_process_id  # get session pid number
 
 
-    def create_folder(self, folder_name):
+    def create_folder(self, folder_name: str) -> str:
+        """
+        Creates a folder with the given name in the current directory.
+        
+        Args:
+            folder_name: Name of the folder to create.
+            
+        Returns:
+            str: Path to the created folder.
+        """
         current_dir = os.getcwd()
         folder_path = os.path.join(current_dir, folder_name)
 
@@ -54,7 +62,13 @@ class pyDesktop(AEDTDesktop) :
         return folder_path
 
 
-    def kill_process(self):
+    def kill_process(self) -> bool:
+        """
+        Kills the AEDT process associated with this desktop session.
+        
+        Returns:
+            bool: True if the process was successfully killed, False otherwise.
+        """
         try:
             proc = psutil.Process(self.pid)
             proc.kill()
@@ -66,25 +80,14 @@ class pyDesktop(AEDTDesktop) :
             return False
 
 
-    def create_project(self, path=os.getcwd(), name=None) :
-
-        project = pyProject(self, path=path)
-        self.projects.append(project)
+    def create_project(self, path: Optional[str] = None, name: Optional[str] = None) -> pyProject:
+        project = pyProject(self, path=path, name=name)
         return project
 
-
-    def load_project(self, path: str):
-        """
-        Load an existing AEDT project file and return pyProject wrapper.
-        """
-        # AEDTDesktop에는 load_project(path)가 있는 버전도 있지만,
-        # 여기서는 현재 세션의 odesktop API로 명시적으로 로드한다.
-        # OpenProject는 성공 시 프로젝트 이름을 반환하거나 active project를 변경한다.
-        self.odesktop.OpenProject(path)
-        name = self.odesktop.GetActiveProject().GetName()
-        project = pyProject(self, name=name, load=True)
-        self.projects.append(project)
+    def load_project(self, path: Optional[str] = None, name: Optional[str] = None) -> pyProject:
+        project = pyProject(self, path=path, name=name, forced_load=True)
         return project
+        
 
     # legacy code
     # def get_project_list(self) :
@@ -101,6 +104,7 @@ class pyDesktop(AEDTDesktop) :
     def get_project_list(self) -> dict[str, pyProject]:
         """
         Returns a dictionary mapping project names to pyProject objects.
+        Uses the projects property internally to avoid code duplication.
         
         Returns:
             dict[str, pyProject]: Dictionary with project names as keys and pyProject objects as values.
@@ -109,14 +113,11 @@ class pyDesktop(AEDTDesktop) :
             >>> projects = desktop.get_project_list()
             >>> my_project = projects["MyProject"]  # 이름으로 객체 찾기
         """
-        projects = {}
-        project_names = self.project_list
-
-        for project_name in project_names:
-            project = pyProject(self, name=project_name, load=True)
-            projects[project_name] = project
+        projects_dict = {}
+        for project in self.projects:  # projects property 활용
+            projects_dict[project.GetName()] = project
             
-        return projects
+        return projects_dict
 
 
 
@@ -124,6 +125,10 @@ class pyDesktop(AEDTDesktop) :
     def projects(self) -> list[pyProject]:
         """
         Returns a list of pyProject objects for all open projects.
+        Automatically updates each time it's accessed.
+        
+        Returns:
+            list[pyProject]: List of pyProject objects for all open projects.
         """
         projects = []
         project_names = self.project_list
@@ -133,10 +138,6 @@ class pyDesktop(AEDTDesktop) :
             projects.append(project)
             
         return projects
-
-
-    def debug2(self) :
-        print("debug mode")
 
 
 
