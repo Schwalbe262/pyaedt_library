@@ -12,33 +12,28 @@ class DesignList(list):
     """
     커스텀 리스트 클래스: 이름으로 design에 접근할 수 있게 함
     """
+    def _get_design_name(self, design):
+        """design 객체에서 이름을 안전하게 가져오기"""
+        # solver_instance.design_name 우선 시도
+        if hasattr(design, 'solver_instance') and design.solver_instance:
+            if hasattr(design.solver_instance, 'design_name'):
+                return design.solver_instance.design_name
+        
+        # name property 시도
+        if hasattr(design, 'name'):
+            return design.name
+        
+        return None
+    
     def __getitem__(self, key):
         # 문자열이면 이름으로 검색
         if isinstance(key, str):
-            for idx, design in enumerate(self):
-                try:
-                    # name property를 통해 이름 가져오기 (solver_instance.design_name 반환)
-                    design_name = None
-                    if hasattr(design, 'solver_instance') and design.solver_instance is not None:
-                        try:
-                            if hasattr(design.solver_instance, 'design_name'):
-                                design_name = design.solver_instance.design_name
-                        except Exception:
-                            pass
-                    
-                    # solver_instance가 없거나 design_name이 없으면 name property 시도
-                    if design_name is None:
-                        try:
-                            design_name = design.name
-                        except Exception:
-                            pass
-                    
-                    if design_name == key:
-                        return design
-                except Exception:
-                    # 에러 발생하면 다음 design으로 넘어감
-                    continue
+            for design in self:
+                design_name = self._get_design_name(design)
+                if design_name == key:
+                    return design
             raise KeyError(f"Design '{key}' not found")
+        
         # 정수면 일반 리스트처럼 인덱스로 접근
         return super().__getitem__(key)
 
@@ -49,31 +44,48 @@ class pyDesign:
         self.project = project
         self.NUM_CORE = 4
 
-        # solver list
-        # HFSS
-        # Maxwell 3D
-        # maxwell 2D
-        # Icepak
-        # Mechanical
-        # Circuit Design
+        self._store = {}
 
-        self.solver_instance = self._create_design(project, name, solver, solution)
+        # 기본 design 생성 (AEDT design 객체)
+        self.solver_instance = self._pydesign(project, name, solver, solution)
+        
+        # solver_instance가 None이면 에러 발생 (필수)
+        if self.solver_instance is None:
+            raise RuntimeError(
+                f"Failed to create solver instance for design '{name}' with solver '{solver}'. "
+                f"Please check if the solver type is valid and the project is properly initialized."
+            )
+        
+        # solver_instance에 현재 pyDesign 인스턴스 연결 (다른 속성 이름 사용)
+        # odesign은 PyAEDT의 property이므로 직접 설정하면 design 생성 시도가 발생함
+        if not hasattr(self.solver_instance, '_py_design'):
+            self.solver_instance._py_design = self
+        
+        # 모듈 초기화 (model3d, post_processing 등)
+        self._get_module()
+        
 
 
     
-    def _create_design(self, project, name, solver, solution):
-
+    def _pydesign(self, project, name, solver, solution):
+        """인스턴스 메서드: design 생성 또는 가져오기"""
         solver = self._solver_name(solver)
         solution = self._solution_name(solver, solution)
-
-        for design in project.project.GetDesigns():
-            design_name = design.GetName()
-            if design_name == name:
-                self.solver_instance = project.project.SetActiveDesign(name)
-                return self.solver_instance
         
-        self.solver_instance = project.project.InsertDesign(solver, name, solution, "")
-        return self.solver_instance
+        if solver == "HFSS":
+            solver_instance = self._setup_hfss(name, solution)
+        elif solver == "Maxwell 3D":
+            solver_instance = self._setup_maxwell(name, solution)
+        elif solver == "Icepak":
+            solver_instance = self._setup_icepak(name, solution)
+        elif solver == "Circuit Design":
+            solver_instance = self._setup_circuit(name, solution)
+        else:
+            raise ValueError(f"Invalid solver: {solver}")
+
+        return solver_instance
+
+        
 
 
 
@@ -116,6 +128,11 @@ class pyDesign:
         else:
             return solution
 
+
+
+
+        
+
     
     def __getattr__(self, name):
         # First, try to get the attribute from the solver instance (e.g., methods like 'create_setup')
@@ -123,7 +140,15 @@ class pyDesign:
             try:
                 return getattr(self.solver_instance, name)
             except AttributeError:
-                # If it's not a method/attribute on the solver, pass to check for it as a design variable
+                # If it's not found in solver_instance, try solver_instance.odesign (original AEDT design object)
+                # odesign은 PyAEDT의 property이므로 직접 접근만 가능 (설정 불가)
+                if hasattr(self.solver_instance, 'odesign'):
+                    try:
+                        odesign = self.solver_instance.odesign
+                        if odesign:
+                            return getattr(odesign, name)
+                    except (AttributeError, TypeError):
+                        pass
                 pass
 
         # Second, try to get it as a design variable using __getitem__
@@ -175,6 +200,40 @@ class pyDesign:
 
     def __repr__(self):
         return f"pyDesign(name={self.name}, solver={self.solver}, solution={self.solution}, store={self._store})"
+
+
+    @classmethod
+    def create_design(cls, project, name=None, solver=None, solution=None):
+        """
+        클래스 메서드: pyDesign 인스턴스를 생성합니다.
+        __init__에서 이미 _setup_*가 호출되므로 여기서는 인스턴스만 생성하고 반환합니다.
+        """
+        return cls(project, name=name, solver=solver, solution=solution)
+    
+
+    def _setup_maxwell(self, name, solution):
+        """Maxwell 3D solver 설정 및 인스턴스 생성"""
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        solver_instance = Maxwell3d(project=None, design=name, solution_type=solution)
+        return solver_instance
+            
+    def _setup_hfss(self, name, solution):
+        """HFSS solver 설정 및 인스턴스 생성"""
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        solver_instance = HFSS(project=None, design=name, solution_type=solution)
+        return solver_instance
+
+    def _setup_circuit(self, name, solution):
+        """Circuit solver 설정 및 인스턴스 생성"""
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        solver_instance = Circuit(project=None, design=name)
+        return solver_instance
+
+    def _setup_icepak(self, name, solution):
+        """Icepak solver 설정 및 인스턴스 생성"""
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        solver_instance = Icepak(project=None, design=name)
+        return solver_instance
 
 
 
@@ -298,53 +357,25 @@ class pyDesign:
     
     @property
     def variables(self) -> dict[str, str]:
-        """
-        Returns a dictionary of all design variables.
-        Automatically updates each time it's accessed.
-        
-        Returns:
-            dict[str, str]: Dictionary mapping variable names to their values.
-            
-        Example:
-            >>> design.variables
-            {'Tx_outer_x': '2.5mm', 'Tx_ratio': '0.9', 'Tx_inner': '1.2mm', ...}
-        """
-        if self.solver_instance:
-            var_dict = {}
-            try:
-                # variable_manager가 있는지 확인
-                if hasattr(self.solver_instance, 'variable_manager'):
-                    vm = self.solver_instance.variable_manager
-                    # independent_variables가 있는지 확인
-                    if hasattr(vm, 'independent_variables'):
-                        for name, var_obj in vm.independent_variables.items():
-                            # 변수 객체에서 값 가져오기
-                            try:
-                                var_dict[name] = var_obj.value
-                            except (AttributeError, TypeError):
-                                try:
-                                    var_dict[name] = var_obj.expression
-                                except (AttributeError, TypeError):
-                                    var_dict[name] = str(var_obj)
-            except Exception as e:
-                # 에러 발생 시 빈 딕셔너리 반환
-                print(f"Warning: Could not retrieve variables: {e}")
-                return {}
-            return var_dict
-        return self._store.copy()
-
+        variables = {
+        var_name: self.solver_instance.odesign.GetVariableValue(var_name) 
+        for var_name in self.solver_instance.odesign.GetVariables()
+        }
+        return variables
 
     @property
     def name(self):
-        return self.solver_instance.GetName()
+        return self.GetName()
     
     @property
     def solver(self):
-        return self.solver_instance.GetDesignType()
+        return self.GetDesignType()
 
     @property
     def solution(self):
-        return self.solver_instance.GetSolutionType()
+        return self.GetSolutionType()
+
+    
 
 
 

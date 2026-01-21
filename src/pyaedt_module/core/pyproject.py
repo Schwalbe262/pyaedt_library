@@ -85,6 +85,9 @@ class pyProject:
         else:
             pass
 
+        # 상대경로를 절대경로로 변환 후 정규화
+        path = os.path.abspath(os.path.normpath(path))
+
         # 이 시점에서는 path의 format은 ~~/~~/~~/simulation.aedt 형태로 맞춰짐
 
         # path의 디렉토리가 없으면 생성
@@ -152,7 +155,7 @@ class pyProject:
         if path is None:
             path = os.path.join(os.getcwd(), self.name + ".aedt")
         else:
-            path = os.path.normpath(os.path.abspath(path))  # OS compatibility
+            path = os.path.abspath(os.path.normpath(path))
 
         # make dir
         save_dir = os.path.dirname(path)
@@ -243,6 +246,59 @@ class pyProject:
         # design = pyDesign.create_design(self, name=name, solver=solver, solution=solution)
         design = pyDesign(self, name=name, solver=solver, solution=solution)
         return design
+
+
+
+    def close(self, save: bool = True) -> None:
+
+        if save:
+            self.save()
+
+        self.close_path = self.aedt_path # 후에 삭제시 사용할 수 있게 최종 경로 받아둠
+        self.close_name = self.name
+        self.desktop.odesktop.CloseProject(self.name)
+        
+
+
+    def delete(self, delete_solution: bool = True) -> None:
+
+        # 종료 안되어있을 경우 종료부터
+        project_names = [project.name for project in self.desktop.projects]
+
+
+        try:
+            name = self.name
+        except (AttributeError, RuntimeError, TypeError):
+            name = self.close_name
+        
+        # 프로젝트가 열려있으면 닫기
+        if name in project_names:
+            self.close(save=False)
+
+
+        # self.aedt_path에 있는 파일 삭제
+        if os.path.isfile(self.close_path):
+            try:
+                os.remove(self.close_path)
+            except Exception as e:
+                print(f"Error deleting AEDT file: {e}")
+
+        # self.aedt_path에 .lock 붙은 파일도 있으면 삭제
+        lock_file = self.close_path + ".lock"
+        if os.path.isfile(lock_file):
+            try:
+                os.remove(lock_file)
+            except Exception as e:
+                print(f"Error deleting lock file: {e}")
+
+        # self.aedt_path에 .aedtresults 붙은 폴더도 있으면 삭제
+        results_folder = self.close_path + "results"
+        if delete_solution:
+            if os.path.isdir(results_folder):
+                try:
+                    shutil.rmtree(results_folder, onerror=self._remove_readonly)
+                except Exception as e:
+                    print(f"Error deleting results folder: {e}")
 
 
 

@@ -120,6 +120,14 @@ class pyDesktop(AEDTDesktop) :
         return projects_dict
 
 
+    # desktop 상에 열려있는 모든 프로젝트를 종료 후 제거
+    def delete(self) -> None :
+        [project.delete() for project in self.projects]
+
+    def close(self) -> None :
+        self.close_desktop()
+
+
 
     @property
     def projects(self) -> ProjectList:
