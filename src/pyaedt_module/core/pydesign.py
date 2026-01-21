@@ -6,6 +6,32 @@ from pyaedt_module.model3d import Model3d
 from .post_processing import PostProcessing
 
 import numpy as np
+import re
+
+
+class VariableWrapper(str):
+    """
+    문자열을 래핑하는 클래스로, 변수 값에서 숫자 부분만 추출할 수 있는 .value() 메서드를 제공합니다.
+    
+    Example:
+        wrapper = VariableWrapper("1.6uH")
+        wrapper.value()  # 1.6
+        str(wrapper)     # "1.6uH"
+    """
+    def value(self):
+        """
+        Return the numeric part of the variable, with any units removed.
+        E.g. '1.6uH' -> 1.6, '1k' -> 1, '2mm' -> 2, etc.
+        If the numeric part cannot be parsed, returns the original string.
+        """
+        s = self.strip()
+        m = re.match(r"^([-\d\.eE+]+)", s)
+        if m:
+            try:
+                return float(m.group(1))
+            except Exception:
+                return self
+        return self
 
 
 class DesignList(list):
@@ -91,7 +117,9 @@ class pyDesign:
 
     def _solver_name(self, solver):
 
-        if solver.lower().replace(" ", "") == "hfss":
+        if solver is None:
+            return "Maxwell 3D"
+        elif solver.lower().replace(" ", "") == "hfss":
             return "HFSS"
         elif solver.lower().replace(" ", "") == "maxwell3d":
             return "Maxwell 3D"
@@ -261,6 +289,9 @@ class pyDesign:
 
 
     def random_variable(self, variable_name=None, lower=None, upper=None, resolution=None, unit=""):
+
+        if unit == None:
+            unit = ""
         
         value = self.get_random_value(lower, upper, resolution)
 
@@ -353,13 +384,19 @@ class pyDesign:
                 
         return excitation_list
 
-
-    
     @property
-    def variables(self) -> dict[str, str]:
+    def variables(self) -> dict[str, VariableWrapper]:
+        """
+        Returns a dictionary where the keys are variable names, and the values are VariableWrapper objects,
+        which behave like str, but have a `.value()` method to obtain the numeric part only.
+
+        Example:
+            design.variables["Ltx"]           # '1.6uH'
+            design.variables["Ltx"].value()   # 1.6
+        """
         variables = {
-        var_name: self.solver_instance.odesign.GetVariableValue(var_name) 
-        for var_name in self.solver_instance.odesign.GetVariables()
+            var_name: VariableWrapper(self.solver_instance.odesign.GetVariableValue(var_name))
+            for var_name in self.solver_instance.odesign.GetVariables()
         }
         return variables
 

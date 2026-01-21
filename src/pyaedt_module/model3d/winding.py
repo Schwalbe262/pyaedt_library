@@ -85,22 +85,22 @@ class Winding:
             object: 생성된 비아 객체
         """
         outer_cylinder = self.design.modeler.create_cylinder(orientation="Z", 
-                                                             origin=[center[0], center[1], f"({center[2]})-({height}/2)"], 
+                                                             origin=[center[0], center[1], f"({center[2]})-(({height})/2)"], 
                                                              radius=outer_R, height=height, name=name, material="copper", num_sides=12)
 
         if inner_R != None :
             inner_cylinder = self.design.modeler.create_cylinder(orientation="Z", 
-                                                                 origin=[center[0], center[1], f"({center[2]})-({height}/2)"], 
+                                                                 origin=[center[0], center[1], f"({center[2]})-(({height})/2)"], 
                                                                  radius=inner_R, height=height, name=f"{name}_inner", material="copper", num_sides=12)
             self.design.modeler.subtract(blank_list = outer_cylinder, tool_list = inner_cylinder, keep_originals = False)
 
         if via_pad_R != None :
 
             upper_pad = self.design.modeler.create_cylinder(orientation="Z", 
-                                                                 origin=[center[0], center[1], f"({center[2]})-({height}/2)"], 
+                                                                 origin=[center[0], center[1], f"({center[2]})+(({height})/2)-({via_pad_thick})"], 
                                                                  radius=via_pad_R, height=via_pad_thick, name=f"{name}_pad_u", material="copper", num_sides=12)
             lower_pad = self.design.modeler.create_cylinder(orientation="Z", 
-                                                                 origin=[center[0], center[1], f"({center[2]})+({height}/2)-({via_pad_thick})"], 
+                                                                 origin=[center[0], center[1], f"({center[2]})-(({height})/2)"], 
                                                                  radius=via_pad_R, height=via_pad_thick, name=f"{name}_pad_l", material="copper", num_sides=12)
             
             outer_cylinder = self.design.model3d.unite(assignment=[outer_cylinder, upper_pad, lower_pad])
@@ -124,7 +124,8 @@ class Winding:
                 fill_factor (float): 코일의 채움 계수
                 theta1 (str): 코일의 각도 1
                 theta2 (str): 코일의 각도 2
-                
+                turns_sub (int) : 빼낼 턴 수 (default: 0)
+
         Returns:
             namedtuple: 코일의 점들과 관련 파라미터들
         """
@@ -149,9 +150,12 @@ class Winding:
         theta1 = kwargs.get("theta1", "15*pi/180")
         theta2 = kwargs.get("theta2", "75*pi/180")
 
+        turns_sub = kwargs.get("turns_sub", 0)
+
+
         points = []
 
-        for i in range(N) :
+        for i in range(turns_sub, N):
 
             points.append([f"({outer_xx}) - ({i})*({wg})*(1/tan({theta2})) - ({wg})", f"-({outer_y}) + ({i-1})*({wg})", 0])
             points.append([f"({outer_x}) - ({i})*({wg})", f"-({outer_yy}) + ({i})*({wg})*(tan({theta1}))", 0])

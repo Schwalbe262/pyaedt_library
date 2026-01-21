@@ -40,7 +40,7 @@ class pyDesktop(AEDTDesktop) :
         )
 
         self.disable_autosave()
-        self.pid = self.aedt_process_id  # get session pid number
+        
 
 
     def create_folder(self, folder_name: str) -> str:
@@ -125,7 +125,7 @@ class pyDesktop(AEDTDesktop) :
         [project.delete() for project in self.projects]
 
     def close(self) -> None :
-        self.close_desktop()
+        return self.close_desktop()
 
 
 
@@ -152,6 +152,9 @@ class pyDesktop(AEDTDesktop) :
             
         return projects
 
+    @property
+    def pid(self) -> int:
+        return self.aedt_process_id
 
 
 
