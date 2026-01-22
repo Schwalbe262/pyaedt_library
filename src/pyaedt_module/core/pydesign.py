@@ -243,24 +243,28 @@ class pyDesign:
         """Maxwell 3D solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         solver_instance = Maxwell3d(project=None, design=name, solution_type=solution)
+        self.solver_instance.design = self
         return solver_instance
             
     def _setup_hfss(self, name, solution):
         """HFSS solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         solver_instance = HFSS(project=None, design=name, solution_type=solution)
+        self.solver_instance.design = self
         return solver_instance
 
     def _setup_circuit(self, name, solution):
         """Circuit solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         solver_instance = Circuit(project=None, design=name)
+        self.solver_instance.design = self
         return solver_instance
 
     def _setup_icepak(self, name, solution):
         """Icepak solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         solver_instance = Icepak(project=None, design=name)
+        self.solver_instance.design = self
         return solver_instance
 
 
