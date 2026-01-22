@@ -76,9 +76,10 @@ class pyProject:
         if path.endswith('.aedt'):
             # if path format : ~~/~~/~~/simulation.aedt
             name = os.path.splitext(os.path.basename(path))[0]
-        elif path.endswith(name):
-            # if path format : ~~/~~/~~/simulation
-            path = path + ".aedt"
+        # 해당 기능 제거 (폴더명과 시뮬레이션 파일명 일치시키는걸 의도한 경우 오작동)
+        # elif path.endswith(name):
+        #     # if path format : ~~/~~/~~/simulation
+        #     path = path + ".aedt"
         elif not path.endswith('.aedt'):
             # if path format : ~~/~~/~~
             path = os.path.join(path, name + ".aedt")

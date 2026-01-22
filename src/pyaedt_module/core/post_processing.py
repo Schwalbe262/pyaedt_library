@@ -19,7 +19,48 @@ class PostProcessing:
         elif freq is None :
             peak_vals_prom = data[peaks_prom].values
             return peak_vals_prom
+
+    def detect_max(self, freq=None, data=None):
+        """
+        Find the maximum value and its corresponding frequency.
+        
+        Args:
+            freq: Frequency array (optional)
+            data: Data array
+            
+        Returns:
+            If freq is provided: (freq_at_max, max_value)
+            If freq is None: max_value
+        """
+        max_idx = np.argmax(data)
+        max_val = data[max_idx]
+        
+        if freq is not None:
+            max_freq = freq.iloc[max_idx] if hasattr(freq, 'iloc') else freq[max_idx]
+            return max_freq, max_val
+        else:
+            return max_val
     
+    def detect_min(self, freq=None, data=None):
+        """
+        Find the minimum value and its corresponding frequency.
+        
+        Args:
+            freq: Frequency array (optional)
+            data: Data array
+            
+        Returns:
+            If freq is provided: (freq_at_min, min_value)
+            If freq is None: min_value
+        """
+        min_idx = np.argmin(data)
+        min_val = data[min_idx]
+        
+        if freq is not None:
+            min_freq = freq.iloc[min_idx] if hasattr(freq, 'iloc') else freq[min_idx]
+            return min_freq, min_val
+        else:
+            return min_val
 
     def detect_zero_crossing(self, freq=None, data=None) :
 
@@ -88,7 +129,12 @@ class PostProcessing:
         data.insert(idx, "Freq [Hz]", new_freq)
         return data
 
+
     def data_preprocessing(self, data) :
+
+        """
+        주파수 값을 맞춰주고 result 파일에 들어있는 input data등 필요 없는 데이터 제거거
+        """
 
         if "Freq [kHz]" in data.columns:
             data = self._convert_frequency(data, "Freq [kHz]", 1e3)
@@ -104,6 +150,7 @@ class PostProcessing:
         data = data.iloc[:, idx:]
 
         return data
+
 
     def get_convergence_report(self, setup_name="Setup1", name=None) :
         report_file = self.design.export_convergence(setup_name=setup_name, variation_string="", file_path=None)
