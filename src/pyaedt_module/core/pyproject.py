@@ -266,7 +266,8 @@ class pyProject:
     def delete(self, delete_solution: bool = True) -> None:
 
         # 종료 안되어있을 경우 종료부터
-        project_names = [project.name for project in self.desktop.projects]
+        if self.desktop.projects is not None:
+            project_names = [project.name for project in self.desktop.projects]
 
 
         try:
