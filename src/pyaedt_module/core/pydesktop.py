@@ -1,6 +1,7 @@
 import os
 import psutil
 from typing import Optional
+import time
 
 from ansys.aedt.core import Desktop as AEDTDesktop
 
@@ -51,7 +52,21 @@ class pyDesktop(AEDTDesktop) :
             **kwargs
         )
 
+        # PyAEDT가 "started" 로그를 찍고도 odesktop이 잠깐 None인 채로 반환되는 케이스가 있음.
+        # (특히 loop로 Desktop을 반복 생성/종료할 때) 이 상태에서 EnableAutoSave를 호출하면
+        # AttributeError로 바로 터지므로, odesktop이 준비될 때까지 잠깐 대기한다.
+        self._wait_for_odesktop(timeout_sec=30.0)
         self.disable_autosave()
+
+
+    def _wait_for_odesktop(self, timeout_sec: float = 30.0, poll_sec: float = 0.2) -> None:
+        """Wait until `self.odesktop` is available or raise RuntimeError."""
+        deadline = time.time() + timeout_sec
+        while time.time() < deadline:
+            if getattr(self, "odesktop", None) is not None:
+                return
+            time.sleep(poll_sec)
+        raise RuntimeError("Desktop initialization failed: odesktop is None after timeout.")
 
 
 
