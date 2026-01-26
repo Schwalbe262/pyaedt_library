@@ -42,7 +42,9 @@ class pyDesktop(AEDTDesktop) :
         # 반복 실행/강제 kill 이후 이 캐시가 "죽은 세션"을 가리키면, 다음 Desktop 생성 시
         # odesktop이 None인 상태로 반환되는 케이스가 생긴다.
         # (참고: ansys.aedt.core.desktop 에서 _desktop_sessions 사용)
-        self._purge_dead_pyaedt_sessions()
+        # 반복 실행에서 'PID None' 같은 깨진 세션 엔트리가 남아있으면 다음 Desktop이 그걸 재사용하려고 함.
+        # new_desktop=True로 새 세션을 원할 때는 캐시를 강하게 비우는게 안전하다.
+        self._purge_dead_pyaedt_sessions(clear_all=bool(new_desktop))
 
         super().__init__(
             version=version,
@@ -74,7 +76,7 @@ class pyDesktop(AEDTDesktop) :
         raise RuntimeError("Desktop initialization failed: odesktop is None after timeout.")
 
     @staticmethod
-    def _purge_dead_pyaedt_sessions() -> None:
+    def _purge_dead_pyaedt_sessions(clear_all: bool = False) -> None:
         """
         PyAEDT 전역 세션 캐시에서 '죽은 PID'를 가진 항목을 제거합니다.
         구현은 버전에 따라 달라질 수 있어, 안전하게 best-effort로 수행합니다.
@@ -104,12 +106,21 @@ class pyDesktop(AEDTDesktop) :
                     pass
             return None
 
+        # 강제 clear 요청이면 무조건 비운다 (new_desktop 반복 실행 안정화 목적)
+        if clear_all:
+            try:
+                _desktop_sessions.clear()  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            return
+
         # dict이면 항목별로 prune
         try:
             items = list(_desktop_sessions.items())  # type: ignore[attr-defined]
             for k, v in items:
                 pid = extract_pid(v)
-                if pid is not None and not psutil.pid_exists(pid):
+                # pid가 없거나 죽어있으면 다음 init에서 재사용하면 안 됨 -> 제거
+                if pid is None or not psutil.pid_exists(pid):
                     try:
                         del _desktop_sessions[k]  # type: ignore[index]
                     except Exception:
