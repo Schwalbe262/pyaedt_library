@@ -125,6 +125,9 @@ class pyProject:
                 # 해당 project가 desktop 세션 안에 이미 있는 경우 -> 객체만 받아옴
                 project = self.desktop.odesktop.SetActiveProject(name)
 
+        self.close_path = self.path
+        self.close_name = self.name
+
         return project
 
 
@@ -293,11 +296,13 @@ class pyProject:
             pass
         """
 
+        """
         # project 이미 열려있으면 닫기
         try :
             self.close(save=False)
         except Exception as e:
             pass
+        """
 
         
 
