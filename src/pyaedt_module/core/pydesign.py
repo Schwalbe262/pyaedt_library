@@ -7,6 +7,7 @@ from .post_processing import PostProcessing
 
 import numpy as np
 import re
+import inspect
 
 
 class VariableWrapper(str):
@@ -242,31 +243,127 @@ class pyDesign:
     def _setup_maxwell(self, name, solution):
         """Maxwell 3D solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
-        solver_instance = Maxwell3d(project=None, design=name, solution_type=solution)
+        solver_instance = self._instantiate_solver(Maxwell3d, design_name=name, solution_type=solution)
         solver_instance.design = self
         return solver_instance
             
     def _setup_hfss(self, name, solution):
         """HFSS solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
-        solver_instance = HFSS(project=None, design=name, solution_type=solution)
+        solver_instance = self._instantiate_solver(HFSS, design_name=name, solution_type=solution)
         solver_instance.design = self
         return solver_instance
 
     def _setup_circuit(self, name, solution):
         """Circuit solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
-        solver_instance = Circuit(project=None, design=name)
+        solver_instance = self._instantiate_solver(Circuit, design_name=name, solution_type=solution)
         solver_instance.design = self
         return solver_instance
 
     def _setup_icepak(self, name, solution):
         """Icepak solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
-        solver_instance = Icepak(project=None, design=name)
+        solver_instance = self._instantiate_solver(Icepak, design_name=name, solution_type=solution)
         solver_instance.design = self
         return solver_instance
 
+
+    def _instantiate_solver(self, solver_cls, design_name: str, solution_type=None):
+        """
+        solver(HFSS/Circuit/Maxwell3d/Icepak) 인스턴스를 생성할 때,
+        Desktop 세션을 "암묵적으로" 만들지 않도록 현재 pyDesktop 세션을 명시적으로 주입합니다.
+
+        - PyAEDT/ansys.aedt.core 버전에 따라 생성자 파라미터명이 달라질 수 있어,
+          실제 signature에 존재하는 키만 골라 kwargs로 전달합니다.
+        """
+        desktop = self.project.desktop
+
+        # underlying AEDT project name은 pyProject.name(property) 대신 project 객체에서 직접 가져오는 편이 안전
+        try:
+            project_name = self.project.project.GetName()
+        except Exception:
+            project_name = getattr(self.project, "name", None)
+
+        # wrapper 클래스는 *args/**kwargs로 init을 감쌀 수 있으므로, 실제 base __init__ signature를 우선 사용
+        base_init = None
+        for cls in solver_cls.__mro__:
+            if cls is solver_cls:
+                continue
+            if "__init__" in cls.__dict__:
+                base_init = cls.__init__
+                break
+        if base_init is None:
+            base_init = solver_cls.__init__
+
+        params = set()
+        try:
+            params = set(inspect.signature(base_init).parameters.keys())
+        except Exception:
+            # signature를 못 얻어도 최소한의 안전값으로 시도
+            params = set()
+
+        kwargs = {}
+
+        # 프로젝트/디자인 이름 파라미터 이름 호환
+        if project_name:
+            if "project" in params:
+                kwargs["project"] = project_name
+            elif "projectname" in params:
+                kwargs["projectname"] = project_name
+            elif "project_name" in params:
+                kwargs["project_name"] = project_name
+
+        if "design" in params:
+            kwargs["design"] = design_name
+        elif "designname" in params:
+            kwargs["designname"] = design_name
+        elif "design_name" in params:
+            kwargs["design_name"] = design_name
+
+        # solution_type 파라미터 호환 (HFSS/Maxwell 등)
+        if solution_type is not None:
+            if "solution_type" in params:
+                kwargs["solution_type"] = solution_type
+            elif "solution" in params:
+                kwargs["solution"] = solution_type
+
+        # Desktop 세션 주입: 가능한 방식(버전별로 다름)을 모두 시도하되, 존재하는 키만 넣는다
+        if "desktop" in params:
+            kwargs["desktop"] = desktop
+
+        pid = getattr(desktop, "aedt_process_id", None)
+        if pid is None:
+            pid = getattr(desktop, "pid", None)
+        if pid is not None and "aedt_process_id" in params:
+            kwargs["aedt_process_id"] = pid
+
+        port = getattr(desktop, "port", None)
+        if port is None:
+            port = getattr(desktop, "grpc_port", None)
+        if port is not None and "port" in params:
+            kwargs["port"] = port
+
+        machine = getattr(desktop, "machine", None)
+        if machine and "machine" in params:
+            kwargs["machine"] = machine
+
+        # 새 Desktop 생성 방지
+        for key in ("new_desktop", "new_desktop_session", "new_session", "AlwaysNew", "always_new"):
+            if key in params:
+                kwargs[key] = False
+
+        # exit에서 desktop release 방지 (우리가 밖에서 관리)
+        for key in ("close_on_exit", "release_on_exit", "release_on_exit", "close_on_exit"):
+            if key in params:
+                kwargs[key] = False
+
+        # non_graphical은 desktop의 값을 따라가되, 파라미터가 있는 경우에만 전달
+        ng = getattr(desktop, "non_graphical", None)
+        if ng is not None and "non_graphical" in params:
+            kwargs["non_graphical"] = ng
+
+        return solver_cls(**kwargs)
 
 
     def _get_module(self):
