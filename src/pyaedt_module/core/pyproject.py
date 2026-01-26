@@ -41,6 +41,8 @@ class pyProject:
 
         self.solver_instance = None
 
+        self.close_path = self.aedt_path # project 종료되도 path 저장하는 변수
+
 
 
     def _get_project(self, path: Optional[str] = None, name: Optional[str] = None, forced_load: bool = True):
