@@ -40,7 +40,7 @@ class pyDesktop(AEDTDesktop) :
         )
 
         self.disable_autosave()
-        
+
 
 
     def create_folder(self, folder_name: str) -> str:

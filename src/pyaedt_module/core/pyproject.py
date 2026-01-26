@@ -283,25 +283,27 @@ class pyProject:
             pass
 
 
-        # self.close_path가 존재하면 해당 경로와 하위 파일들 모두 강제 삭제
+        # self.close_path가 존재하면 해당 경로와 하위 파일들(폴더 자체 포함) 모두 강제 삭제
         if os.path.exists(self.close_path):
-            if os.path.isfile(self.close_path):
+            def on_rm_error(func, path, exc_info):
+                # readonly 강제 삭제
+                try:
+                    os.chmod(path, stat.S_IWRITE)
+                    func(path)
+                except Exception as e2:
+                    print(f"Error forcibly removing {path}: {e2}")
+
+            try:
+                # 파일이든 폴더든 동일하게 rmtree 시도 (파일이면 파일 자체만, 폴더면 폴더와 내용물 전체 삭제됨)
+                shutil.rmtree(self.close_path, onerror=on_rm_error)
+            except NotADirectoryError:
+                # 파일일 경우, rmtree가 NotADirectoryError 발생시 파일만 삭제
                 try:
                     os.remove(self.close_path)
                 except Exception as e:
                     print(f"Error deleting file: {self.close_path}, {e}")
-            elif os.path.isdir(self.close_path):
-                def on_rm_error(func, path, exc_info):
-                    # readonly 강제 삭제
-                    try:
-                        os.chmod(path, stat.S_IWRITE)
-                        func(path)
-                    except Exception as e2:
-                        print(f"Error forcibly removing {path}: {e2}")
-                try:
-                    shutil.rmtree(self.close_path, onerror=on_rm_error)
-                except Exception as e:
-                    print(f"Error deleting folder {self.close_path}: {e}")
+            except Exception as e:
+                print(f"Error deleting {self.close_path}: {e}")
 
 
 
