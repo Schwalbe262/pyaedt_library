@@ -173,6 +173,22 @@ class pyDesktop(AEDTDesktop) :
                 return False
 
             proc = psutil.Process(pid)
+            # AEDT는 자식 프로세스를 여러 개 띄울 수 있어, 부모만 죽이면 리소스(UDS/lock)가 남을 수 있음.
+            # 가능한 한 프로세스 트리를 먼저 정리한다.
+            try:
+                children = proc.children(recursive=True)
+                for c in children:
+                    try:
+                        c.kill()
+                    except Exception:
+                        pass
+                for c in children:
+                    try:
+                        c.wait(timeout=5)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
             proc.kill()
             try:
                 proc.wait(timeout=15)
