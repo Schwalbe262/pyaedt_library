@@ -81,6 +81,10 @@ class pyDesktop(AEDTDesktop) :
 
             proc = psutil.Process(pid)
             proc.kill()
+            try:
+                proc.wait(timeout=15)
+            except Exception:
+                pass
             return True
         except psutil.NoSuchProcess:
             return False
