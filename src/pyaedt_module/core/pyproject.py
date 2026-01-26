@@ -35,13 +35,24 @@ class pyProject:
         # project 객체를 가져와서 저장 (이 객체의 모든 메서드/속성을 pyProject가 위임받음)
         self.project = self._get_project(path=path, name=name, forced_load=forced_load)
         
+        # close/delete 시 사용할 기본 정보는 project 객체가 생긴 뒤에만 접근 가능
+        # (_get_project 내부에서 self.path/self.name을 호출하면 초기화 순서 문제로 재귀가 발생할 수 있음)
+        try:
+            self.close_path = self.project.GetPath()
+        except Exception:
+            self.close_path = None
+        try:
+            self.close_name = self.project.GetName()
+        except Exception:
+            self.close_name = None
+
         # underlying AEDT project object (for __getattr__ forwarding)
         # self.proj는 self.project와 동일하지만, 명시적으로 유지
         self.proj = self.project
 
         self.solver_instance = None
 
-        self.close_path = self.path # project 종료되도 path 저장하는 변수
+        # project 종료되도 path 저장하는 변수 (위에서 project 기반으로 세팅)
 
 
 
@@ -125,15 +136,15 @@ class pyProject:
                 # 해당 project가 desktop 세션 안에 이미 있는 경우 -> 객체만 받아옴
                 project = self.desktop.odesktop.SetActiveProject(name)
 
-        self.close_path = self.path
-        self.close_name = self.name
-
         return project
 
 
     def __getattr__(self, name):
-        # project class 상속
-        return getattr(self.proj, name)
+        # 초기화 도중(self.proj 세팅 전) 잘못된 attribute 접근이 오면 무한 재귀를 피한다.
+        proj = self.__dict__.get("proj")
+        if proj is None:
+            raise AttributeError(name)
+        return getattr(proj, name)
     
     def __dir__(self):
         default_dir = super().__dir__()
