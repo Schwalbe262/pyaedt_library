@@ -117,7 +117,7 @@ class pyProject:
                             pass
             project = self.desktop.odesktop.OpenProject(path)
         else:
-            if name not in self.desktop.project_list: 
+            if name not in list(self.desktop.odesktop.GetProjectList()): 
                 # 해당 project가 desktop 세션 안에 없는경우 -> 새 프로젝트 생성
                 project = self.desktop.odesktop.NewProject(path)
                 project.SaveAs(path, True)
