@@ -263,7 +263,7 @@ class pyProject:
         
 
 
-    def delete(self, delete_folder: bool = True) -> None:
+    def delete(self, delete_folder: bool = True, delay: int = 5) -> None:
 
         # 종료 안되어있을 경우 종료부터
         try :
@@ -282,6 +282,7 @@ class pyProject:
         except Exception as e:
             pass
 
+        time.sleep(delay)
 
         # self.close_path가 존재하면 해당 경로와 하위 파일들(폴더 자체 포함) 모두 강제 삭제
         if os.path.exists(self.close_path):
