@@ -275,6 +275,7 @@ class pyProject:
             max_retries (int): 삭제 재시도 횟수 (기본 3)
         """
 
+        """
         # 종료 안되어있을 경우 종료부터
         try:
             if self.desktop.projects is not None:
@@ -289,6 +290,13 @@ class pyProject:
                     self.close(save=False)
                     time.sleep(delay)
         except Exception:
+            pass
+        """
+
+        # project 이미 열려있으면 닫기
+        try :
+            self.close(save=False)
+        except Exception as e:
             pass
 
         
