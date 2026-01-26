@@ -263,13 +263,21 @@ class pyProject:
         
 
 
-    def delete(self, delete_folder: bool = True, delay: int = 5) -> None:
+    def delete(self, delete_folder: bool = True, delay: int = 1, max_retries: int = 3) -> None:
+        """
+        프로젝트와 관련된 파일 및 폴더를 삭제합니다.
+        메인 폴더가 남는 문제/액세스 오류([WinError 32])가 발생하면 삭제를 여러번 시도합니다.
+
+        Args:
+            delete_folder (bool): 폴더 자체를 지울지 여부 (기본: True)
+            delay (int): 삭제 전에 대기할 시간(초)
+            max_retries (int): 삭제 재시도 횟수 (기본 3)
+        """
 
         # 종료 안되어있을 경우 종료부터
-        try :
+        try:
             if self.desktop.projects is not None:
                 project_names = [project.name for project in self.desktop.projects]
-
                 try:
                     name = self.name
                 except (AttributeError, RuntimeError, TypeError):
@@ -278,14 +286,14 @@ class pyProject:
                 # 프로젝트가 열려있으면 닫기
                 if name in project_names:
                     self.close(save=False)
-                    
-        except Exception as e:
+        except Exception:
             pass
 
         time.sleep(delay)
 
         # self.close_path가 존재하면 해당 경로와 하위 파일들(폴더 자체 포함) 모두 강제 삭제
-        if os.path.exists(self.close_path):
+        target_path = self.close_path
+        if os.path.exists(target_path):
             def on_rm_error(func, path, exc_info):
                 # readonly 강제 삭제
                 try:
@@ -294,17 +302,37 @@ class pyProject:
                 except Exception as e2:
                     print(f"Error forcibly removing {path}: {e2}")
 
-            try:
-                # 파일이든 폴더든 동일하게 rmtree 시도 (파일이면 파일 자체만, 폴더면 폴더와 내용물 전체 삭제됨)
-                shutil.rmtree(self.close_path, onerror=on_rm_error)
-            except NotADirectoryError:
-                # 파일일 경우, rmtree가 NotADirectoryError 발생시 파일만 삭제
+            for attempt in range(max_retries):
                 try:
-                    os.remove(self.close_path)
+                    # 일반적으로 폴더 삭제
+                    shutil.rmtree(target_path, onerror=on_rm_error)
+                    # 삭제 성공했으면 빠져나감
+                    if not os.path.exists(target_path):
+                        break
+                except NotADirectoryError:
+                    # 파일일 경우, rmtree가 NotADirectoryError 발생시 파일만 삭제
+                    try:
+                        os.remove(target_path)
+                        if not os.path.exists(target_path):
+                            break
+                    except Exception as e:
+                        print(f"Error deleting file: {target_path}, {e}")
                 except Exception as e:
-                    print(f"Error deleting file: {self.close_path}, {e}")
-            except Exception as e:
-                print(f"Error deleting {self.close_path}: {e}")
+                    print(f"Error deleting {target_path}: {e}")
+                    # [WinError 32] 등 액세스 오류 발생시 재시도
+                    time.sleep(1)
+                else:
+                    # 삭제에 성공했다면 루프 탈출
+                    if not os.path.exists(target_path):
+                        break
+
+            # 삭제 후에도 폴더가 남아있으면 한번 더 시도: 남은 하위 파일/폴더 처리 후 폴더 삭제
+            if os.path.exists(target_path):
+                try:
+                    # 폴더가 남아있으면(비어있는 경우) 한 번 더 삭제 시도
+                    os.rmdir(target_path)
+                except Exception as e:
+                    print(f"Error forcibly removing main folder: {target_path}: {e}")
 
 
 
