@@ -101,7 +101,8 @@ class pyProject:
         if os.path.isfile(path):
             # 해당하는 파일이 이미 있다면 aedt 파일 load 동작
             if name in self.desktop.project_list: # 이미 열려있는 객체를 또 불러오는 경우
-                project = self.desktop.odesktop.SetActiveProject(name)
+                # project = self.desktop.odesktop.SetActiveProject(name)
+                project = self.desktop.SetActiveProject(name)
                 return project
             if forced_load is True:
                 lockfile = path + ".lock"
@@ -114,16 +115,19 @@ class pyProject:
                             os.remove(lockfile)
                         except: 
                             pass
-            project = self.desktop.odesktop.OpenProject(path)
+            # project = self.desktop.odesktop.OpenProject(path)
+            project = self.desktop.OpenProject(path)
         else:
             if name not in self.desktop.project_list: 
                 # 해당 project가 desktop 세션 안에 없는경우 -> 새 프로젝트 생성
-                project = self.desktop.odesktop.NewProject(path)
+                # project = self.desktop.odesktop.NewProject(path)
+                project = self.desktop.NewProject(path)
                 project.SaveAs(path, True)
             else:
                 # 해당 project가 desktop 세션 안에 이미 있는 경우 -> 객체만 받아옴
-                project = self.desktop.odesktop.SetActiveProject(name)
-
+                # project = self.desktop.odesktop.SetActiveProject(name)
+                project = self.desktop.SetActiveProject(name)
+                
         return project
 
 
@@ -286,10 +290,11 @@ class pyProject:
                 # 프로젝트가 열려있으면 닫기
                 if name in project_names:
                     self.close(save=False)
+                    time.sleep(delay)
         except Exception:
             pass
 
-        time.sleep(delay)
+        
 
         # self.close_path가 존재하면 해당 경로와 하위 파일들(폴더 자체 포함) 모두 강제 삭제
         target_path = self.close_path
