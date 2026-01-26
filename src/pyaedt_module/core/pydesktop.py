@@ -2,6 +2,7 @@ import os
 import psutil
 from typing import Optional
 import time
+from typing import Any
 
 from ansys.aedt.core import Desktop as AEDTDesktop
 
@@ -37,7 +38,11 @@ class pyDesktop(AEDTDesktop) :
         *args,
         **kwargs
     ):
-        
+        # PyAEDT는 프로세스 내 전역으로 Desktop 세션 캐시(_desktop_sessions)를 유지한다.
+        # 반복 실행/강제 kill 이후 이 캐시가 "죽은 세션"을 가리키면, 다음 Desktop 생성 시
+        # odesktop이 None인 상태로 반환되는 케이스가 생긴다.
+        # (참고: ansys.aedt.core.desktop 에서 _desktop_sessions 사용)
+        self._purge_dead_pyaedt_sessions()
 
         super().__init__(
             version=version,
@@ -67,6 +72,57 @@ class pyDesktop(AEDTDesktop) :
                 return
             time.sleep(poll_sec)
         raise RuntimeError("Desktop initialization failed: odesktop is None after timeout.")
+
+    @staticmethod
+    def _purge_dead_pyaedt_sessions() -> None:
+        """
+        PyAEDT 전역 세션 캐시에서 '죽은 PID'를 가진 항목을 제거합니다.
+        구현은 버전에 따라 달라질 수 있어, 안전하게 best-effort로 수행합니다.
+
+        관련 코드: https://github.com/ansys/pyaedt/blob/main/src/ansys/aedt/core/desktop.py
+        """
+        try:
+            from ansys.aedt.core.internal.desktop_sessions import _desktop_sessions  # type: ignore
+        except Exception:
+            return
+
+        # _desktop_sessions가 dict-like이거나, 커스텀 매니저일 수 있음
+        def extract_pid(v: Any) -> Optional[int]:
+            for key in ("aedt_process_id", "pid", "process_id"):
+                try:
+                    pid = getattr(v, key, None)
+                    if isinstance(pid, int) and pid > 0:
+                        return pid
+                except Exception:
+                    pass
+                try:
+                    if isinstance(v, dict):
+                        pid = v.get(key)
+                        if isinstance(pid, int) and pid > 0:
+                            return pid
+                except Exception:
+                    pass
+            return None
+
+        # dict이면 항목별로 prune
+        try:
+            items = list(_desktop_sessions.items())  # type: ignore[attr-defined]
+            for k, v in items:
+                pid = extract_pid(v)
+                if pid is not None and not psutil.pid_exists(pid):
+                    try:
+                        del _desktop_sessions[k]  # type: ignore[index]
+                    except Exception:
+                        pass
+            return
+        except Exception:
+            pass
+
+        # 그 외엔 clear 시도
+        try:
+            _desktop_sessions.clear()  # type: ignore[attr-defined]
+        except Exception:
+            pass
 
 
 
