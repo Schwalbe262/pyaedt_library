@@ -9,6 +9,7 @@ from .pyproject import pyProject, ProjectList
 import socket # for grpc
 
 
+
 class pyDesktop(AEDTDesktop) :
 
     def __init__(
@@ -70,7 +71,15 @@ class pyDesktop(AEDTDesktop) :
             bool: True if the process was successfully killed, False otherwise.
         """
         try:
-            proc = psutil.Process(self.pid)
+            pid = self.pid
+            # 잘못된 PID(또는 파이썬 자기 PID)를 죽이면 로그가 flush 되기 전에 프로세스가 종료될 수 있음
+            if pid is None or not isinstance(pid, int) or pid <= 0:
+                return False
+            if pid == os.getpid():
+                print("Warning: desktop.pid equals current Python PID. Skip killing to avoid self-termination.")
+                return False
+
+            proc = psutil.Process(pid)
             proc.kill()
             return True
         except psutil.NoSuchProcess:
