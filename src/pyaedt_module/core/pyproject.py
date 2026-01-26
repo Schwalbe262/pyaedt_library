@@ -101,7 +101,7 @@ class pyProject:
         if os.path.isfile(path):
             # 해당하는 파일이 이미 있다면 aedt 파일 load 동작
             # if name in self.desktop.project_list: # 이미 열려있는 객체를 또 불러오는 경우
-            if name in self.desktop.odesktop.GetProjectList():
+            if name in list(self.desktop.odesktop.GetProjectList()):
                 project = self.desktop.odesktop.SetActiveProject(name)
                 return project
             if forced_load is True:
