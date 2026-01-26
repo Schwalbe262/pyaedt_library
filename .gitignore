@@ -1,47 +1,50 @@
+# =========================
 # Python artifacts
+# =========================
 __pycache__/
 *.pyc
-**/*.pyc
 *.pyo
 *.pyd
 .Python
-build/
-dist/
-*.egg-info/
+
+# Virtual environments
 .env
 .venv
 env/
 venv/
 
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# =========================
 # IDE settings
+# =========================
 .vscode/
 .idea/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
 
-# Ansys / PyAEDT Simulation Specific
-# ----------------------------------
-
-# Simulation project files and lock files
+# =========================
+# Ansys / PyAEDT Simulation
+# =========================
 *.aedt
 *.aedt.lock
 *.aedb/
 *.aedtresults/
 
-# Simulation output directories (anywhere in the project)
-**/simulation/
-**/results/
-**/output/
+# Simulation output directories
+simulation/
+results/
+output/
 
-# Log files, data files, and lock files
+# Logs and data
 *.log
-**/data/*.csv
+data/*.csv
 simulation_results.csv
 simulation_num.txt
 simulation_results.csv.lock
-
-*.pyc
-# Python 캐시 파일들 (하위 디렉토리 포함)
-__pycache__/
-**/__pycache__/
