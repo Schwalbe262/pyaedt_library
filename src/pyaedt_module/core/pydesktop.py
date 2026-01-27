@@ -18,12 +18,12 @@ class pyDesktop(AEDTDesktop) :
     # (loop 0 성공 출력 후 다음 loop로 못 넘어가는 증상)
     # 이 클래스는 simulation_script.py의 finally에서 kill_process로 프로세스를 확실히 정리하므로,
     # context manager exit에서는 아무것도 하지 않도록 오버라이드한다.
-    def __enter__(self):
-        return self
+    # def __enter__(self):
+    #     return self
 
-    def __exit__(self, exc_type, exc, tb):
-        # 예외는 숨기지 않음 (False)
-        return False
+    # def __exit__(self, exc_type, exc, tb):
+    #     # 예외는 숨기지 않음 (False)
+    #     return False
 
     def __init__(
         self,
