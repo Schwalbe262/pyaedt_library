@@ -1,4 +1,5 @@
 from pyaedt_module.solver.maxwell3d import Maxwell3d
+from pyaedt_module.solver.maxwell2d import Maxwell2d
 from pyaedt_module.solver.hfss import HFSS
 from pyaedt_module.solver.circuit import Circuit
 from pyaedt_module.solver.icepak import Icepak
@@ -102,7 +103,9 @@ class pyDesign:
         if solver == "HFSS":
             solver_instance = self._setup_hfss(name, solution)
         elif solver == "Maxwell 3D":
-            solver_instance = self._setup_maxwell(name, solution)
+            solver_instance = self._setup_maxwell3d(name, solution)
+        elif solver == "Maxwell 2D":
+            solver_instance = self._setup_maxwell2d(name, solution)
         elif solver == "Icepak":
             solver_instance = self._setup_icepak(name, solution)
         elif solver == "Circuit Design":
@@ -240,10 +243,17 @@ class pyDesign:
         return cls(project, name=name, solver=solver, solution=solution)
     
 
-    def _setup_maxwell(self, name, solution):
+    def _setup_maxwell3d(self, name, solution):
         """Maxwell 3D solver 설정 및 인스턴스 생성"""
         self.project.desktop.odesktop.SetActiveProject(self.project.name)
         solver_instance = self._instantiate_solver(Maxwell3d, design_name=name, solution_type=solution)
+        solver_instance.design = self
+        return solver_instance
+
+    def _setup_maxwell2d(self, name, solution):
+        """Maxwell 2D solver 설정 및 인스턴스 생성"""
+        self.project.desktop.odesktop.SetActiveProject(self.project.name)
+        solver_instance = self._instantiate_solver(Maxwell2d, design_name=name, solution_type=solution)
         solver_instance.design = self
         return solver_instance
             
@@ -423,6 +433,8 @@ class pyDesign:
             design_obj = pyDesign.create_design(self.project, name=design_name, solver="icepak")
         elif design_type == "Maxwell 3D" :
             design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell3d")
+        elif design_type == "Maxwell 2D" :
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell2d")
         elif design_type == "HFSS" :
             design_obj = pyDesign.create_design(self.project, name=design_name, solver="hfss")
         else :
