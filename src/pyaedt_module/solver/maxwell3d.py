@@ -82,6 +82,14 @@ class Maxwell3d(AEDTMaxwell3d) :
             "nW": 1e-9, "uW": 1e-6, "mW": 1e-3, "W": 1.0, "kW": 1e3, "MW": 1e6, "GW": 1e9,
         }
 
+        def _normalize_unit(unit):
+            if unit is None:
+                return ""
+            u = str(unit).strip()
+            # Handle common unicode micro symbols.
+            u = u.replace("µ", "u").replace("μ", "u")
+            return u
+
         for new_col_name, target_unit in unit_mapping.items():
             if new_col_name not in output_df.columns:
                 continue
@@ -90,15 +98,16 @@ class Maxwell3d(AEDTMaxwell3d) :
             
             # Extract source unit from the original column name (e.g., 'uH' from 'L(V1,V1) [uH]')
             match = re.search(r'\[(.*?)\]', original_col_name)
-            source_unit = match.group(1) if match else "" # Defaults to unitless if no [] found
+            source_unit = _normalize_unit(match.group(1) if match else "") # Defaults to unitless if no [] found
+            target_unit_norm = _normalize_unit(target_unit)
 
             # Get conversion factors for source and target units
             source_factor = unit_factors.get(source_unit, 1.0)
-            target_factor = unit_factors.get(target_unit, 1.0)
+            target_factor = unit_factors.get(target_unit_norm, 1.0)
 
             # Calculate the multiplier to convert from source to target unit
             # Example: from mH (1e-3) to uH (1e-6) -> multiplier is 1e-3 / 1e-6 = 1000
-            if target_unit == "" or target_unit is None : # Handle unitless parameters like 'k'
+            if target_unit_norm == "" : # Handle unitless parameters like 'k'
                 conversion_multiplier = 1.0
             elif target_factor != 0:
                 conversion_multiplier = source_factor / target_factor
