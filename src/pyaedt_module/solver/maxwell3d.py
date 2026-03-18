@@ -72,8 +72,15 @@ class Maxwell3d(AEDTMaxwell3d) :
         # Invert mapping to retrieve original column names for unit parsing
         inverted_rename_mapping = {v: k for k, v in rename_mapping.items()}
         
-        # Define unit conversion factors relative to the base unit (e.g., H for inductance)
-        unit_factors = {"pH": 1e-12, "nH": 1e-9, "uH": 1e-6, "mH": 1e-3, "H": 1.0}
+        # Define unit conversion factors relative to base units.
+        # - Inductance base: H
+        # - Power(loss) base: W
+        unit_factors = {
+            # Inductance
+            "pH": 1e-12, "nH": 1e-9, "uH": 1e-6, "mH": 1e-3, "H": 1.0,
+            # Power / loss
+            "nW": 1e-9, "uW": 1e-6, "mW": 1e-3, "W": 1.0, "kW": 1e3, "MW": 1e6, "GW": 1e9,
+        }
 
         for new_col_name, target_unit in unit_mapping.items():
             if new_col_name not in output_df.columns:
