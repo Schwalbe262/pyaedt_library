@@ -428,15 +428,16 @@ class pyDesign:
 
         design_name = self.project.desktop.active_design().GetName()
         design_type = self.project.desktop.active_design().GetDesignType()
+        solution_type = self.project.desktop.active_design().GetSolutionType()
 
         if design_type == "Icepak" :
-            design_obj = pyDesign.create_design(self.project, name=design_name, solver="icepak")
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="icepak", solution=solution_type)
         elif design_type == "Maxwell 3D" :
-            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell3d")
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell3d", solution=solution_type)
         elif design_type == "Maxwell 2D" :
-            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell2d")
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="maxwell2d", solution=solution_type)
         elif design_type == "HFSS" :
-            design_obj = pyDesign.create_design(self.project, name=design_name, solver="hfss")
+            design_obj = pyDesign.create_design(self.project, name=design_name, solver="hfss", solution=solution_type)
         else :
             return False
 
