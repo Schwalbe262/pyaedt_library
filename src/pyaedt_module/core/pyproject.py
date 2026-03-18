@@ -1,4 +1,4 @@
-import pyaedt
+import ansys.aedt.core as pyaedt
 import os
 import shutil
 import stat
