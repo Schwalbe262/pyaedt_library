@@ -4,22 +4,11 @@ import platform
 import shutil
 import logging
 from datetime import datetime
+from pathlib import Path
 
-os_name = platform.system()
-if os_name == "Windows":
-    sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/")
-    sys.path.insert(0, r"C:/Users/NEC_5950X1/Desktop/git/pyaedt_library/src/")
-else :
-    # 두 가지 가능한 경로 패턴
-    possible_paths = [
-        "/gpfs/home1/r1jae262/jupyter/git/pyaedt_library/src/",
-        "/gpfs/home2/wjddn5916/Ansys_NEC/git/pyaedt_library/src/"
-    ]
-    
-    # 존재하는 경로만 sys.path에 추가
-    for path in possible_paths:
-        if os.path.exists(path):
-            sys.path.insert(0, path)
+_REPO_SRC = Path(__file__).resolve().parents[2] / "src"
+if _REPO_SRC.exists() and str(_REPO_SRC) not in sys.path:
+    sys.path.insert(0, str(_REPO_SRC))
 
 import pyaedt_module
 from pyaedt_module.core import pyDesktop

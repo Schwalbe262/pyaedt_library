@@ -2,12 +2,11 @@ import sys
 import os
 import platform
 import shutil
+from pathlib import Path
 
-os_name = platform.system()
-if os_name == "Windows":
-    sys.path.insert(0, r"Y:/git/insulation_amp/pyaedt_library/src/") 
-else :
-    sys.path.insert(0, r"/gpfs/home1/r1jae262/jupyter/git/pyaedt_library/src/")
+_REPO_SRC = Path(__file__).resolve().parents[2] / "src"
+if _REPO_SRC.exists() and str(_REPO_SRC) not in sys.path:
+    sys.path.insert(0, str(_REPO_SRC))
 
 import pyaedt_module
 from pyaedt_module.core import pyDesktop
