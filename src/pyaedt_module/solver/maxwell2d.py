@@ -1,5 +1,7 @@
 from ansys.aedt.core import Maxwell2d as AEDTMaxwell2d
 
+from ._compat import coerce_assignment_names
+
 
 class Maxwell2d(AEDTMaxwell2d):
 
@@ -24,8 +26,6 @@ class Maxwell2d(AEDTMaxwell2d):
 
         from ansys.aedt.core.modules.boundary.maxwell_boundary import MatrixACMagnetic
 
-        sources = assignment
-        if not isinstance(sources, dict):
-            sources = [item.name if hasattr(item, "name") else item for item in sources]
-
-        return super().assign_matrix(MatrixACMagnetic(sources=sources, matrix_name=matrix_name))
+        return super().assign_matrix(
+            MatrixACMagnetic(sources=coerce_assignment_names(assignment), matrix_name=matrix_name)
+        )

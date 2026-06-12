@@ -4,6 +4,7 @@ import numpy as np
 import time
 
 from ._reports import export_report_to_dataframe, select_report_columns
+from ._compat import coerce_assignment_names
 
 
 class Maxwell3d(AEDTMaxwell3d) :
@@ -37,11 +38,9 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         from ansys.aedt.core.modules.boundary.maxwell_boundary import MatrixACMagnetic
 
-        sources = assignment
-        if not isinstance(sources, dict):
-            sources = [item.name if hasattr(item, "name") else item for item in sources]
-
-        return super().assign_matrix(MatrixACMagnetic(sources=sources, matrix_name=matrix_name))
+        return super().assign_matrix(
+            MatrixACMagnetic(sources=coerce_assignment_names(assignment), matrix_name=matrix_name)
+        )
 
 
     def set_power_ferrite(self, cm=3, x=1.5, y=2.5, per=1000) :

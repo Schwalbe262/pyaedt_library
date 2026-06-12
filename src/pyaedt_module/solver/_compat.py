@@ -91,3 +91,18 @@ def build_solver_kwargs(params, *, desktop, project_name, design_name, solution_
     )
 
     return kwargs
+
+
+def coerce_assignment_names(assignment):
+    """Return assignment names while accepting AEDT objects, strings, or dicts."""
+    if isinstance(assignment, dict):
+        return {
+            key: [item.name if hasattr(item, "name") else item for item in value]
+            if isinstance(value, (list, tuple, set))
+            else value.name if hasattr(value, "name")
+            else value
+            for key, value in assignment.items()
+        }
+    if isinstance(assignment, str):
+        return [assignment]
+    return [item.name if hasattr(item, "name") else item for item in assignment]
