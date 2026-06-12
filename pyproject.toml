@@ -6,15 +6,24 @@ build-backend = "setuptools.build_meta"
 name = "pyaedt-library"
 version = "0.1.0"
 description = "Common PyAEDT helper library"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-  "pyaedt>=0.15",
+  "pyaedt>=1.0.1,<2",
   "pyedb",
   "ansys-pythonnet",
   "clr_loader",
   "grpcio",
   "rpyc",
   "numpy",
+  "pandas",
+  "scipy",
+  "matplotlib",
+  "filelock",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
 ]
 
 [tool.setuptools]
