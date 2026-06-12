@@ -246,8 +246,11 @@ class pyDesktop(AEDTDesktop) :
     def delete(self) -> None :
         [project.delete() for project in self.projects]
 
-    def close(self) -> None :
-        return self.close_desktop()
+    def release(self, close_projects: bool = True, close_on_exit: bool = True) -> bool:
+        return self.release_desktop(close_projects=close_projects, close_on_exit=close_on_exit)
+
+    def close(self) -> bool:
+        return self.release(close_projects=True, close_on_exit=True)
 
 
 

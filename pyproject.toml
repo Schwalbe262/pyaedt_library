@@ -19,6 +19,7 @@ dependencies = [
   "scipy",
   "matplotlib",
   "filelock",
+  "psutil",
 ]
 
 [project.optional-dependencies]

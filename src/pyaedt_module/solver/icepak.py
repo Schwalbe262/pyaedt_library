@@ -1,7 +1,7 @@
 from ansys.aedt.core import Icepak as AEDTIcepak
-import numpy as np
 import pandas as pd
-import os
+
+from ._reports import export_report_to_dataframe, select_report_columns
 
 class Icepak(AEDTIcepak) :
 
@@ -26,9 +26,11 @@ class Icepak(AEDTIcepak) :
             report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = "Fields")
             if not hasattr(self, "report_list"):
                 self.report_list = {}
-            self.report_list["icepak_calc_report"] = report
+            self.report_list[report_name] = report
         elif mod == "read" :
-            report = self.report_list.get("icepak_calc_report", import_report)
+            if not hasattr(self, "report_list"):
+                self.report_list = {}
+            report = import_report or self.report_list.get(report_name)
             # In "read" mode, reconstruct the expression and name lists for column mapping
             for obj, name, expression_type in parameters:
                 name_list.append(name)
@@ -47,30 +49,8 @@ class Icepak(AEDTIcepak) :
         if not report:
              return None, pd.DataFrame(columns=[p[1] for p in parameters])
 
-        export_path = os.path.join(dir, f"{file_name}.csv")
-        oDesign = self.odesign
-        oModule = oDesign.GetModule("ReportSetup")
-        oModule.ExportToFile(report_name, export_path, False)
-        data = pd.read_csv(export_path)
-
-        # Create a mapping from the actual column names in the CSV to the desired names
-        rename_mapping = {}
-        for expr, desired_name in zip(result_expressions, name_list):
-            for col in data.columns:
-                if expr in col:
-                    rename_mapping[col] = desired_name
-                    break
-        
-        # Rename columns and select only the ones we need
-        output_df = data.rename(columns=rename_mapping)
-
-        # Ensure all desired columns exist, adding missing ones with NaN
-        for name in name_list:
-            if name not in output_df.columns:
-                output_df[name] = np.nan
-
-        output_df = output_df[name_list]
-        output_df.dropna(inplace=True)
+        data = export_report_to_dataframe(self, dir, report_name, file_name)
+        output_df = select_report_columns(data, result_expressions, name_list, add_missing=True)
 
         #output_df.to_csv("icepak_calculator.csv")
         
@@ -188,24 +168,16 @@ class Icepak(AEDTIcepak) :
 
         object_name = [obj if isinstance(obj, str) else obj.name for obj in assignment]
 
-        # The original AEDT Icepak object has methods like assign_source_power, assign_source_flux.
-        # It seems you intended to use a more generic method. I'll use a valid one.
-        # For "Fixed Temperature", we assign a temperature boundary.
-        if thermal_condition == "Fixed Temperature":
-            setting = self.assign_source(
-                assignment = object_name, 
-                thermal_condition = thermal_condition, 
-                assignment_value = assignment_value, 
-                boundary_name = boundary_name
-            )
-        else:
-            # Placeholder for other conditions you might want to implement
-            # For example, for "Total Power" you would use assign_source_power
-            # For "Surface Flux" you would use assign_source_flux
-            print(f"Thermal condition '{thermal_condition}' is not yet implemented in this helper.")
-            return False
+        supported = {"Fixed Temperature", "Total Power", "Surface Flux"}
+        if thermal_condition not in supported:
+            raise ValueError(f"thermal_condition must be one of {sorted(supported)}")
 
-        return setting
+        return self.assign_source(
+            assignment=object_name,
+            thermal_condition=thermal_condition,
+            assignment_value=assignment_value,
+            boundary_name=boundary_name,
+        )
     
 
 

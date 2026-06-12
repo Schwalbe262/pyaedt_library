@@ -4,4 +4,5 @@ pandas
 scipy
 matplotlib
 filelock
+psutil
 pytest

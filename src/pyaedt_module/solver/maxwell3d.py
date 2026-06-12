@@ -2,8 +2,8 @@ from ansys.aedt.core import Maxwell3d as AEDTMaxwell3d
 import pandas as pd
 import numpy as np
 import time
-import re
-import os
+
+from ._reports import export_report_to_dataframe, select_report_columns
 
 
 class Maxwell3d(AEDTMaxwell3d) :
@@ -13,6 +13,35 @@ class Maxwell3d(AEDTMaxwell3d) :
 
         self.design = None
         self.report_list = {}
+
+    def assign_matrix(self, args=None, matrix_name=None, assignment=None, **kwargs):
+        """Assign a Maxwell matrix while preserving the legacy helper API.
+
+        PyAEDT 1.0.1 expects a structured matrix schema. Older examples in this
+        repository call ``assign_matrix(matrix_name=..., assignment=[...])``.
+        When that legacy shape is used, convert it to ``MatrixACMagnetic``.
+        Structured arguments are forwarded unchanged.
+        """
+        if args is not None:
+            return super().assign_matrix(args)
+
+        if assignment is None:
+            assignment = kwargs.pop("assignment", None)
+        if assignment is None:
+            assignment = kwargs.pop("sources", None)
+        if matrix_name is None:
+            matrix_name = kwargs.pop("matrix_name", "Matrix")
+
+        if assignment is None:
+            return super().assign_matrix(**kwargs)
+
+        from ansys.aedt.core.modules.boundary.maxwell_boundary import MatrixACMagnetic
+
+        sources = assignment
+        if not isinstance(sources, dict):
+            sources = [item.name if hasattr(item, "name") else item for item in sources]
+
+        return super().assign_matrix(MatrixACMagnetic(sources=sources, matrix_name=matrix_name))
 
 
     def set_power_ferrite(self, cm=3, x=1.5, y=2.5, per=1000) :
@@ -34,74 +63,24 @@ class Maxwell3d(AEDTMaxwell3d) :
         if mod == "write" :
             result_expressions = [matrix for matrix, _, _ in parameters]
             report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = None)
+            self.report_list[report_name] = report
         elif mod == "read" :
             report = import_report
 
         # Assuming the report object is stored if mod != "write"
         # This part might need adjustment if report is not persisted.
-        if 'report' not in locals() and hasattr(self, 'report_list') and 'magnetic_report' in self.report_list:
-            report = self.report_list['magnetic_report']
+        if 'report' not in locals() and hasattr(self, 'report_list') and report_name in self.report_list:
+            report = self.report_list[report_name]
         elif 'report' not in locals():
             # Handle case where report is not created and not found
-            return pd.DataFrame()
+            return None, pd.DataFrame()
         
 
-        export_path = os.path.join(dir, f"{file_name}.csv")
-        oDesign = self.odesign
-        oModule = oDesign.GetModule("ReportSetup")
-        oModule.ExportToFile(report_name, export_path, False)
-        data = pd.read_csv(export_path)
-        
-        # Create a mapping from the expression in the report to the desired new name
-        rename_mapping = {}
-        # Create a mapping for unit conversion
-        unit_mapping = {}
-
-        for expression, new_name, unit in parameters:
-            # Find the actual column name in the DataFrame, which might include units
-            for col in data.columns:
-                if expression in col:
-                    rename_mapping[col] = new_name
-                    unit_mapping[new_name] = unit
-                    break
-        
-        # Select and rename the desired columns
-        output_df = data[list(rename_mapping.keys())].rename(columns=rename_mapping)
-
-        # Unit conversion
-        # Invert mapping to retrieve original column names for unit parsing
-        inverted_rename_mapping = {v: k for k, v in rename_mapping.items()}
-        
-        # Define unit conversion factors relative to the base unit (e.g., H for inductance)
-        unit_factors = {"pH": 1e-12, "nH": 1e-9, "uH": 1e-6, "mH": 1e-3, "H": 1.0}
-
-        for new_col_name, target_unit in unit_mapping.items():
-            if new_col_name not in output_df.columns:
-                continue
-
-            original_col_name = inverted_rename_mapping.get(new_col_name, "")
-            
-            # Extract source unit from the original column name (e.g., 'uH' from 'L(V1,V1) [uH]')
-            match = re.search(r'\[(.*?)\]', original_col_name)
-            source_unit = match.group(1) if match else "" # Defaults to unitless if no [] found
-
-            # Get conversion factors for source and target units
-            source_factor = unit_factors.get(source_unit, 1.0)
-            target_factor = unit_factors.get(target_unit, 1.0)
-
-            # Calculate the multiplier to convert from source to target unit
-            # Example: from mH (1e-3) to uH (1e-6) -> multiplier is 1e-3 / 1e-6 = 1000
-            if target_unit == "" or target_unit is None : # Handle unitless parameters like 'k'
-                conversion_multiplier = 1.0
-            elif target_factor != 0:
-                conversion_multiplier = source_factor / target_factor
-            else:
-                conversion_multiplier = 1.0
-            
-            # Apply the conversion to the column
-            output_df[new_col_name] = pd.to_numeric(output_df[new_col_name], errors='coerce').abs() * conversion_multiplier
-
-        output_df.dropna(inplace=True)
+        data = export_report_to_dataframe(self, dir, report_name, file_name)
+        expressions = [expression for expression, _, _ in parameters]
+        names = [new_name for _, new_name, _ in parameters]
+        units = [unit for _, _, unit in parameters]
+        output_df = select_report_columns(data, expressions, names, units)
 
         #output_df.to_csv("maxwell_magnetic.csv")
         
@@ -122,8 +101,9 @@ class Maxwell3d(AEDTMaxwell3d) :
         if mod == "write" :
             result_expressions, name_list = self._add_calculator_expression(parameters=parameters)
             report = self._create_report(report_name = report_name, result_expressions = result_expressions, category = "Fields")
+            self.report_list[report_name] = report
         elif mod == "read" :
-            report = import_report
+            report = import_report or self.report_list.get(report_name)
             # In "read" mode, we must reconstruct the expression and name lists
             # that would have been created in "write" mode, without modifying the AEDT project.
             name_list = []
@@ -143,31 +123,8 @@ class Maxwell3d(AEDTMaxwell3d) :
              # Return an empty DataFrame with the expected column names.
              return None, pd.DataFrame(columns=name_list)
 
-        export_path = os.path.join(dir, f"{file_name}.csv")
-        oDesign = self.odesign
-        oModule = oDesign.GetModule("ReportSetup")
-        oModule.ExportToFile(report_name, export_path, False)
-        data = pd.read_csv(export_path)
-
-        # Create a mapping from the actual column names in the CSV to the desired names
-        rename_mapping = {}
-        for expr, desired_name in zip(result_expressions, name_list):
-            for col in data.columns:
-                if expr in col:
-                    rename_mapping[col] = desired_name
-                    break
-        
-        # Rename columns and select only the ones we need, in the correct order.
-        output_df = data.rename(columns=rename_mapping)
-        
-        # Ensure all desired columns exist, adding missing ones with NaN
-        for name in name_list:
-            if name not in output_df.columns:
-                output_df[name] = np.nan
-        
-        output_df = output_df[name_list]
-
-        output_df.dropna(inplace=True)
+        data = export_report_to_dataframe(self, dir, report_name, file_name)
+        output_df = select_report_columns(data, result_expressions, name_list, add_missing=True)
 
         #output_df.to_csv("maxwell_calculator.csv")
 
