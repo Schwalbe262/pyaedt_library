@@ -106,3 +106,51 @@ def coerce_assignment_names(assignment):
     if isinstance(assignment, str):
         return [assignment]
     return [item.name if hasattr(item, "name") else item for item in assignment]
+
+
+def get_solution_type(app):
+    """Best-effort solution type lookup for a PyAEDT app or pyDesign wrapper."""
+    for attr in ("solution_type", "solution"):
+        value = getattr(app, attr, None)
+        if value:
+            return value() if callable(value) else value
+
+    design = getattr(app, "design", None)
+    if design is not None and design is not app:
+        value = get_solution_type(design)
+        if value:
+            return value
+
+    for method_name in ("GetSolutionType",):
+        method = getattr(app, method_name, None)
+        if callable(method):
+            try:
+                return method()
+            except Exception:
+                pass
+    return None
+
+
+def build_maxwell_matrix_schema(assignment, matrix_name=None, solution_type=None):
+    """Create the PyAEDT 1.0 matrix schema for legacy source-name calls."""
+    names = coerce_assignment_names(assignment)
+    solution_text = str(solution_type or "").lower().replace(" ", "")
+
+    from ansys.aedt.core.modules.boundary.maxwell_boundary import (
+        MatrixACMagnetic,
+        MatrixMagnetostatic,
+        SourceACMagnetic,
+        SourceMagnetostatic,
+    )
+
+    if "magnetostatic" in solution_text:
+        return MatrixMagnetostatic(
+            signal_sources=[SourceMagnetostatic(name) for name in names],
+            group_sources=[],
+            matrix_name=matrix_name,
+        )
+
+    return MatrixACMagnetic(
+        signal_sources=[SourceACMagnetic(name) for name in names],
+        matrix_name=matrix_name,
+    )

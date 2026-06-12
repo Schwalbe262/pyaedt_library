@@ -88,7 +88,7 @@ class Simulation() :
 
     def create_design(self, name) :
         self.project = self.desktop.create_project()
-        self.maxwell_design = self.project.create_design(name=name, solver="Maxwell3d", solution=None)
+        self.maxwell_design = self.project.create_design(name=name, solver="Maxwell3d", solution="AC Magnetic")
         return self.maxwell_design
 
     
@@ -110,11 +110,14 @@ class Simulation() :
         set_design_variables(self.maxwell_design, input_parameter)
 
     def set_maxwell_analysis(self) :
-        self.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.setup.props["MaximumPasses"] = 10 # 10
-        self.setup.props["MinimumPasses"] = 1
-        self.setup.props["PercentError"] = 2.5
-        self.setup.props["Frequency"] = "30kHz"
+        self.maxwell_design.setup = self.maxwell_design.create_setup(name = "Setup1")
+        self.maxwell_design.set_setup_properties(
+            MaximumPasses=10,
+            MinimumPasses=1,
+            PercentError=2.5,
+            Frequency="30kHz",
+        )
+        self.setup = self.maxwell_design.setup
         self.maxwell_design.freq = 30e+3
 
     def create_core(self):

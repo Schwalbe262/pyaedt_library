@@ -4,7 +4,7 @@ import numpy as np
 import time
 
 from ._reports import export_report_to_dataframe, select_report_columns
-from ._compat import coerce_assignment_names
+from ._compat import build_maxwell_matrix_schema, get_solution_type
 
 
 class Maxwell3d(AEDTMaxwell3d) :
@@ -36,10 +36,12 @@ class Maxwell3d(AEDTMaxwell3d) :
         if assignment is None:
             return super().assign_matrix(**kwargs)
 
-        from ansys.aedt.core.modules.boundary.maxwell_boundary import MatrixACMagnetic
-
         return super().assign_matrix(
-            MatrixACMagnetic(sources=coerce_assignment_names(assignment), matrix_name=matrix_name)
+            build_maxwell_matrix_schema(
+                assignment=assignment,
+                matrix_name=matrix_name,
+                solution_type=get_solution_type(self),
+            )
         )
 
 

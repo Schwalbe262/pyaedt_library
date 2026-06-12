@@ -122,7 +122,7 @@ class Simulation() :
 
     def create_design(self, name) :
         self.project = self.desktop.create_project()
-        self.maxwell_design = self.project.create_design(name=name, solver="Maxwell3d", solution=None)
+        self.maxwell_design = self.project.create_design(name=name, solver="Maxwell3d", solution="AC Magnetic")
         return self.maxwell_design
 
     
@@ -145,11 +145,14 @@ class Simulation() :
 
     def set_maxwell_analysis(self) :
         self.maxwell_design.setup = self.maxwell_design.create_setup(name = "Setup1")
-        self.maxwell_design.setup.properties["Max. Number of Passes"] = 12 # 10
-        self.maxwell_design.setup.properties["Min. Number of Passes"] = 1
-        self.maxwell_design.setup.properties["Min. Converged Passes"] = 3
-        self.maxwell_design.setup.properties["Percent Error"] = 2.5 # 2.5
-        self.maxwell_design.setup.properties["Frequency Setup"] = f"{self.maxwell_design.frequency}kHz"
+        frequency = self.maxwell_design.get_variable_value("frequency", default=20)
+        self.maxwell_design.set_setup_properties(
+            MaximumPasses=12,
+            MinimumPasses=1,
+            MinimumConvergedPasses=3,
+            PercentError=2.5,
+            Frequency=f"{frequency}kHz",
+        )
 
 
     def create_one_turn(self):
@@ -295,9 +298,11 @@ class Simulation() :
         self.maxwell_design2.Rx_winding2["Current"] = '0 * sqrt(2)A'
 
         self.maxwell_design2.setup = self.maxwell_design2.get_setup(name="Setup1")
-        self.maxwell_design2.setup.properties["Max. Number of Passes"] = 12 # 10
-        self.maxwell_design2.setup.properties["Min. Converged Passes"] = 3
-        self.maxwell_design2.setup.properties["Percent Error"] = 1 # 2.5
+        self.maxwell_design2.set_setup_properties(
+            MaximumPasses=12,
+            MinimumConvergedPasses=3,
+            PercentError=1,
+        )
 
 
         self.analyze_maxwell(self.maxwell_design2)

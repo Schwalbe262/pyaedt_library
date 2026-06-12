@@ -50,6 +50,15 @@ class DesignList(list):
         return super().__getitem__(key)
 
 
+SETUP_PROPERTY_ALIASES = {
+    "Max. Number of Passes": ("MaximumPasses", "Max. Number of Passes"),
+    "Min. Number of Passes": ("MinimumPasses", "Min. Number of Passes"),
+    "Min. Converged Passes": ("MinimumConvergedPasses", "Min. Converged Passes"),
+    "Percent Error": ("PercentError", "Percent Error"),
+    "Frequency Setup": ("Frequency", "Frequency Setup"),
+}
+
+
 class pyDesign:
     def __init__(self, project, name=None, solver=None, solution=None):
         self.project = project
@@ -198,7 +207,11 @@ class pyDesign:
         if variable_manager is not None:
             independent_variables = getattr(variable_manager, "independent_variables", {})
             if key in independent_variables:
-                return independent_variables[key].value
+                variable = independent_variables[key]
+                for attr in ("value", "expression"):
+                    if hasattr(variable, attr):
+                        return getattr(variable, attr)
+                return str(variable)
         return self._store.get(key)
 
     def __setitem__(self, key, value):
@@ -266,6 +279,32 @@ class pyDesign:
         if value is default:
             return default
         return VariableWrapper(str(value)).value()
+
+    def set_setup_properties(self, setup=None, properties=None, update=True, **kwargs):
+        """Set setup properties using PyAEDT 1.x names or legacy display names."""
+        setup = setup or getattr(self, "setup", None)
+        if setup is None:
+            raise ValueError("setup must be provided or assigned to design.setup")
+
+        setup_props = getattr(setup, "props", None)
+        if setup_props is None:
+            setup_props = getattr(setup, "properties", None)
+        if setup_props is None:
+            raise AttributeError("setup object has neither props nor properties")
+
+        values = {}
+        if properties:
+            values.update(properties)
+        values.update(kwargs)
+
+        for key, value in values.items():
+            candidates = SETUP_PROPERTY_ALIASES.get(key, (key,))
+            target = next((candidate for candidate in candidates if candidate in setup_props), candidates[0])
+            setup_props[target] = value
+
+        if update and hasattr(setup, "update"):
+            setup.update()
+        return setup
 
     def get_active_design(self):
         active_design = self.project.desktop.active_design()

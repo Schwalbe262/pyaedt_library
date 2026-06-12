@@ -1,6 +1,6 @@
 from ansys.aedt.core import Maxwell2d as AEDTMaxwell2d
 
-from ._compat import coerce_assignment_names
+from ._compat import build_maxwell_matrix_schema, get_solution_type
 
 
 class Maxwell2d(AEDTMaxwell2d):
@@ -24,8 +24,10 @@ class Maxwell2d(AEDTMaxwell2d):
         if assignment is None:
             return super().assign_matrix(**kwargs)
 
-        from ansys.aedt.core.modules.boundary.maxwell_boundary import MatrixACMagnetic
-
         return super().assign_matrix(
-            MatrixACMagnetic(sources=coerce_assignment_names(assignment), matrix_name=matrix_name)
+            build_maxwell_matrix_schema(
+                assignment=assignment,
+                matrix_name=matrix_name,
+                solution_type=get_solution_type(self),
+            )
         )
