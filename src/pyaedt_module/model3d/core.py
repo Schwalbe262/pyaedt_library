@@ -51,6 +51,8 @@ class Core :
         core_h1 = kwargs.get("h1", "80mm") # core_h1
 
         material = kwargs.get("mat", "ferrite")
+        if material == "power_ferrite":
+            material = getattr(self.design, "power_ferrite_material_name", material)
         coreloss = kwargs.get("coreloss", False)
 
         # make core (main part)
@@ -144,6 +146,8 @@ class Core :
         core_h1 = kwargs.get("h1", "80mm") # core_h1
 
         material = kwargs.get("mat", "ferrite")
+        if material == "power_ferrite":
+            material = getattr(self.design, "power_ferrite_material_name", material)
         coreloss = kwargs.get("coreloss", False)
 
         # make core (main part)

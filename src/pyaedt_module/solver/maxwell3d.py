@@ -2,6 +2,7 @@ from ansys.aedt.core import Maxwell3d as AEDTMaxwell3d
 import pandas as pd
 import numpy as np
 import time
+import random
 import re
 import os
 
@@ -16,8 +17,25 @@ class Maxwell3d(AEDTMaxwell3d) :
 
 
     def set_power_ferrite(self, cm=3, x=1.5, y=2.5, per=1000) :
-        
-        power_ferrite = self.design.materials.duplicate_material("ferrite","power_ferrite")
+
+        shared_session = os.getenv("SLURM_AEDT_SHARED_SESSION") == "1"
+        power_ferrite = False
+        for attempt in range(3):
+            material_name = (
+                f"power_ferrite_{os.getpid()}_{attempt + 1}"
+                if shared_session else "power_ferrite"
+            )
+            power_ferrite = self.design.materials.duplicate_material("ferrite", material_name)
+            if power_ferrite and not isinstance(power_ferrite, bool):
+                break
+            if attempt < 2:
+                time.sleep(random.uniform(0.5, 1.5))
+        else:
+            raise RuntimeError(
+                f"Failed to duplicate ferrite material after 3 attempts (last name: {material_name})"
+            )
+
+        self.design.power_ferrite_material_name = material_name
         time.sleep(1)
         power_ferrite.set_power_ferrite_coreloss(cm=cm, x=x, y=y)
         power_ferrite.permeability = per
